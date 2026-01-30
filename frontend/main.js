@@ -15,7 +15,23 @@ canvas.height = MAP_ROWS * TILE_SIZE;
 // 1 = obstacle (black, collidable)
 const tilemap = [];
 
+// event listeners
+canvas.addEventListener("click", handleCanvasClick);
 
+// event handlers
+function handleCanvasClick(event) {
+    // set coord to canvas position not window
+    const rect = canvas.getBoundingClientRect();
+
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // convert from px to grid coord
+    const col = Math.floor(mouseX / TILE_SIZE);
+    const row = Math.floor(mouseY / TILE_SIZE);
+
+    toggleTile(row, col);
+};
 
 // fill tilempa
 for (let row = 0; row < MAP_ROWS; row++) {
@@ -27,6 +43,15 @@ for (let row = 0; row < MAP_ROWS; row++) {
     tilemap.push(rowArray);
 };
 
+function toggleTile(row, col) {
+    if (tilemap[row][col] === 0) {
+        tilemap[row][col] = 1;
+    } else {
+        tilemap[row][col] = 0;
+    }
+
+    drawTilemap();
+}
 
 function drawTilemap() {
     // iterate through each tile and draw according to value

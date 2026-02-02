@@ -2,6 +2,7 @@ const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
 const drawBtn = document.getElementById("drawBtn");
+const eraseBtn = document.getElementById("eraseBtn");
 
 // tilemap config
 const TILE_SIZE = 32; // each tile 32px
@@ -18,6 +19,7 @@ canvas.height = MAP_ROWS * TILE_SIZE;
 const tilemap = [];
 
 // flag tells whether drawing (obstacles) is active
+let currentTool = null;
 let isPainting = false;
 let drawModeEnabled = false;
 
@@ -25,13 +27,18 @@ let drawModeEnabled = false;
 // canvas.addEventListener("click", handleCanvasClick);
 // DRAW OBSTACLES
 drawBtn.addEventListener("click", () => {
-    drawModeEnabled = !drawModeEnabled;
+    toggleTool("draw");
+    // drawModeEnabled = !drawModeEnabled;
 
-    if (!drawModeEnabled) {
-        isPainting = false;
-    }
+    // if (!drawModeEnabled) {
+    //     isPainting = false;
+    // }
 
-    drawBtn.classList.toggle("active", drawModeEnabled);
+    // drawBtn.classList.toggle("active", drawModeEnabled);
+})
+
+eraseBtn.addEventListener("click", () => {
+    toggleTool("erase");
 })
 
 canvas.addEventListener("pointerdown", onPointerDown);
@@ -67,21 +74,21 @@ function getTileFromPointer(event) {
 }
 
 function onPointerDown(event) {
-    if (!drawModeEnabled) return;
+    if (!currentTool) return;
 
     isPainting = true;
 
     const { row, col } = getTileFromPointer(event);
-    paintTile(row, col);
+    applyTool(row, col);
 
     drawTilemap();
 }
 
 function onPointerMove(event) {
-    if (!isPainting || !drawModeEnabled) return;
+    if (!isPainting || !currentTool) return;
 
     const { row, col } = getTileFromPointer(event);
-    paintTile(row, col);
+    applyTool(row, col);
 
     drawTilemap();
 }
@@ -139,17 +146,33 @@ function drawTilemap() {
 
 let lastPaintedTile = null; 
 
-function paintTile(row, col) {
-    const key = `${row}, ${col}`;
-    if (lastPaintedTile === key) return;
+function applyTool(row, col) {
+    // const key = `${row}, ${col}`;
+    // if (lastPaintedTile === key) return;
 
     if (row < 0 || row >= MAP_ROWS || 
         col < 0 || col >= MAP_COLS
     ) return;
 
-    tilemap[row][col] = 1;
-    lastPaintedTile = key;
+    if (currentTool === "draw") tilemap[row][col] = 1;
+    else if (currentTool === "erase") tilemap[row][col] = 0;
+
+    // tilemap[row][col] = 1;
+    // lastPaintedTile = key;
 }
 
+function toggleTool(tool) {
+    if (currentTool === tool) {
+        currentTool = null;
+    } else {
+        currentTool = tool;
+    }
+
+    // stop drawing when switching tools
+    isPainting = false;
+
+    drawBtn.classList.toggle("active", currentTool === "draw");
+    eraseBtn.classList.toggle("active", currentTool === "erase");
+}
 
 drawTilemap();

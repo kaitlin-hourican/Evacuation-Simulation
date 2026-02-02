@@ -15,8 +15,15 @@ canvas.height = MAP_ROWS * TILE_SIZE;
 // 1 = obstacle (black, collidable)
 const tilemap = [];
 
+// flag tells whether drawing (obstacles) is active
+let isPainting = false;
+
 // event listeners
-canvas.addEventListener("click", handleCanvasClick);
+// canvas.addEventListener("click", handleCanvasClick);
+canvas.addEventListener("pointerdown", onPointerDown);
+canvas.addEventListener("pointermove", onPointerMove);
+canvas.addEventListener("pointerup", onPointerUp);
+canvas.addEventListener("pointerleave", onPointerUp);
 
 // event handlers
 function handleCanvasClick(event) {
@@ -32,6 +39,41 @@ function handleCanvasClick(event) {
 
     toggleTile(row, col);
 };
+
+function getTileFromPointer(event) {
+    const rect = canvas.getBoundingClientRect();
+
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    const col = Math.floor(x / TILE_SIZE);
+    const row = Math.floor(y / TILE_SIZE);
+
+    return { row, col };
+}
+
+function onPointerDown(event) {
+    isPainting = true;
+
+    const { row, col } = getTileFromPointer(event);
+    paintTile(row, col);
+
+    drawTilemap();
+}
+
+function onPointerMove(event) {
+    if (!isPainting) return;
+
+    const { row, col } = getTileFromPointer(event);
+    paintTile(row, col);
+
+    drawTilemap();
+}
+
+function onPointerUp() {
+    isPainting = false;
+    lastPaintedTile = null;
+}
 
 // fill tilempa
 for (let row = 0; row < MAP_ROWS; row++) {
@@ -77,6 +119,21 @@ function drawTilemap() {
         }
     }
 };
+
+
+let lastPaintedTile = null; 
+
+function paintTile(row, col) {
+    const key = `${row}, ${col}`;
+    if (lastPaintedTile === key) return;
+
+    if (row < 0 || row >= MAP_ROWS || 
+        col < 0 || col >= MAP_COLS
+    ) return;
+
+    tilemap[row][col] = 1;
+    lastPaintedTile = key;
+}
 
 
 drawTilemap();

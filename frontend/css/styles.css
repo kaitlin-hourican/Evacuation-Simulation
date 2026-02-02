@@ -9,6 +9,7 @@ body {
   border: 1px solid #333;
   display: block;
   margin: 0 auto;
+  touch-action: none;
 }
 
 #controlPanel {

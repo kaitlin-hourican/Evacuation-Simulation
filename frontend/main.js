@@ -1,6 +1,8 @@
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
+const drawBtn = document.getElementById("drawBtn");
+
 // tilemap config
 const TILE_SIZE = 32; // each tile 32px
 const MAP_COLS = 20; // width in tiles
@@ -17,9 +19,21 @@ const tilemap = [];
 
 // flag tells whether drawing (obstacles) is active
 let isPainting = false;
+let drawModeEnabled = false;
 
 // event listeners
 // canvas.addEventListener("click", handleCanvasClick);
+// DRAW OBSTACLES
+drawBtn.addEventListener("click", () => {
+    drawModeEnabled = !drawModeEnabled;
+
+    if (!drawModeEnabled) {
+        isPainting = false;
+    }
+
+    drawBtn.classList.toggle("active", drawModeEnabled);
+})
+
 canvas.addEventListener("pointerdown", onPointerDown);
 canvas.addEventListener("pointermove", onPointerMove);
 canvas.addEventListener("pointerup", onPointerUp);
@@ -53,6 +67,8 @@ function getTileFromPointer(event) {
 }
 
 function onPointerDown(event) {
+    if (!drawModeEnabled) return;
+
     isPainting = true;
 
     const { row, col } = getTileFromPointer(event);
@@ -62,7 +78,7 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
-    if (!isPainting) return;
+    if (!isPainting || !drawModeEnabled) return;
 
     const { row, col } = getTileFromPointer(event);
     paintTile(row, col);
@@ -85,15 +101,15 @@ for (let row = 0; row < MAP_ROWS; row++) {
     tilemap.push(rowArray);
 };
 
-function toggleTile(row, col) {
-    if (tilemap[row][col] === 0) {
-        tilemap[row][col] = 1;
-    } else {
-        tilemap[row][col] = 0;
-    }
+// function toggleTile(row, col) {
+//     if (tilemap[row][col] === 0) {
+//         tilemap[row][col] = 1;
+//     } else {
+//         tilemap[row][col] = 0;
+//     }
 
-    drawTilemap();
-}
+//     drawTilemap();
+// }
 
 function drawTilemap() {
     // iterate through each tile and draw according to value

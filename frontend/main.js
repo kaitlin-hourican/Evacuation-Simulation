@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 
 const drawBtn = document.getElementById("drawBtn");
 const eraseBtn = document.getElementById("eraseBtn");
+const agentBtn = document.getElementById("addAgentBtn");
 
 // tilemap config
 const TILE_SIZE = 32; // each tile 32px
@@ -18,33 +19,35 @@ canvas.height = MAP_ROWS * TILE_SIZE;
 // 1 = obstacle (black, collidable)
 const tilemap = [];
 
-// flag tells whether drawing (obstacles) is active
+// flags
 let currentTool = null;
 let isPainting = false;
 let drawModeEnabled = false;
+let hoveredTile = null;
 
 // event listeners
-// canvas.addEventListener("click", handleCanvasClick);
-// DRAW OBSTACLES
+
 drawBtn.addEventListener("click", () => {
     toggleTool("draw");
-    // drawModeEnabled = !drawModeEnabled;
-
-    // if (!drawModeEnabled) {
-    //     isPainting = false;
-    // }
-
-    // drawBtn.classList.toggle("active", drawModeEnabled);
 })
 
 eraseBtn.addEventListener("click", () => {
     toggleTool("erase");
 })
 
+agentBtn.addEventListener("click", () => {
+    toggleTool("addAgent");
+})
+
 canvas.addEventListener("pointerdown", onPointerDown);
 canvas.addEventListener("pointermove", onPointerMove);
 canvas.addEventListener("pointerup", onPointerUp);
 canvas.addEventListener("pointerleave", onPointerUp);
+canvas.addEventListener("pointerleave", () => {
+    hoveredTile = null;
+    isPainting = false;
+    drawTilemap();
+})
 
 // event handlers
 function handleCanvasClick(event) {
@@ -85,10 +88,24 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
-    if (!isPainting || !currentTool) return;
+     if (!currentTool) return;
 
     const { row, col } = getTileFromPointer(event);
-    applyTool(row, col);
+
+    // update hover state ALWAYS
+    if (
+        row >= 0 && row < MAP_ROWS &&
+        col >= 0 && col < MAP_COLS
+    ) {
+        hoveredTile = { row, col };
+    } else {
+        hoveredTile = null;
+    }
+
+    // only apply tool while painting
+    if (isPainting) {
+        applyTool(row, col);
+    }
 
     drawTilemap();
 }
@@ -107,16 +124,6 @@ for (let row = 0; row < MAP_ROWS; row++) {
     }
     tilemap.push(rowArray);
 };
-
-// function toggleTile(row, col) {
-//     if (tilemap[row][col] === 0) {
-//         tilemap[row][col] = 1;
-//     } else {
-//         tilemap[row][col] = 0;
-//     }
-
-//     drawTilemap();
-// }
 
 function drawTilemap() {
     // iterate through each tile and draw according to value
@@ -141,24 +148,31 @@ function drawTilemap() {
             ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
         }
     }
+    drawHoverPreview();
+
+    drawAgents();
 };
 
 
 let lastPaintedTile = null; 
 
 function applyTool(row, col) {
-    // const key = `${row}, ${col}`;
-    // if (lastPaintedTile === key) return;
-
     if (row < 0 || row >= MAP_ROWS || 
         col < 0 || col >= MAP_COLS
     ) return;
 
-    if (currentTool === "draw") tilemap[row][col] = 1;
-    else if (currentTool === "erase") tilemap[row][col] = 0;
+    if (currentTool === "draw" && isAgentAt(row, col)) return;
+    if (currentTool === "erase" && isAgentAt(row, col)) return;
 
-    // tilemap[row][col] = 1;
-    // lastPaintedTile = key;
+    if (currentTool === "draw") {
+        tilemap[row][col] = 1;
+    } else if (currentTool === "erase") {
+        tilemap[row][col] = 0;
+    } else if (currentTool === "addAgent") {
+        if (tilemap[row][col] === 1) return;
+        if (isAgentAt(row, col)) return;
+        agents.push({ row, col });
+    }
 }
 
 function toggleTool(tool) {
@@ -173,6 +187,50 @@ function toggleTool(tool) {
 
     drawBtn.classList.toggle("active", currentTool === "draw");
     eraseBtn.classList.toggle("active", currentTool === "erase");
+    agentBtn.classList.toggle("active", currentTool === "addAgent");
+}
+
+
+const agents = [];
+
+function drawAgents() {
+    ctx.fillStyle = "#0077ff";
+
+    for (const agent of agents) {
+        const centerX = agent.col * TILE_SIZE + TILE_SIZE / 2;
+        const centerY = agent.row * TILE_SIZE + TILE_SIZE / 2;
+        const radius = TILE_SIZE * 0.35;
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function isAgentAt(row, col) {
+    return agents.some(a => a.row === row && a.col === col);
 }
 
 drawTilemap();
+
+
+
+function drawHoverPreview() {
+    if (!hoveredTile || !currentTool || isPainting) return;
+
+    const { row, col } = hoveredTile;
+
+    const x = col * TILE_SIZE;
+    const y = row * TILE_SIZE;
+
+    if (currentTool === "draw") {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    } else if (currentTool === "erase") {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    }
+
+    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+
+    ctx.strokeStyle = "#666";
+    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+}

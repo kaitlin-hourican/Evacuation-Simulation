@@ -3,7 +3,9 @@ const ctx = canvas.getContext("2d");
 
 const drawBtn = document.getElementById("drawBtn");
 const eraseBtn = document.getElementById("eraseBtn");
+const clearBtn = document.getElementById("clearBtn");
 const agentBtn = document.getElementById("addAgentBtn");
+const removeAgentBtn = document.getElementById("removeAgentBtn");
 
 // tilemap config
 const TILE_SIZE = 32; // each tile 32px
@@ -35,9 +37,16 @@ eraseBtn.addEventListener("click", () => {
     toggleTool("erase");
 })
 
+clearBtn.addEventListener("click", clearTileMap);
+
 agentBtn.addEventListener("click", () => {
     toggleTool("addAgent");
 })
+
+removeAgentBtn.addEventListener("click", () => {
+    toggleTool("removeAgent");
+})
+
 
 canvas.addEventListener("pointerdown", onPointerDown);
 canvas.addEventListener("pointermove", onPointerMove);
@@ -172,6 +181,13 @@ function applyTool(row, col) {
         if (tilemap[row][col] === 1) return;
         if (isAgentAt(row, col)) return;
         agents.push({ row, col });
+    } else if (currentTool === "removeAgent") {
+        if (!isAgentAt(row, col)) return;   
+
+        const index = getAgentIndexAt(row, col);
+        if (index !== -1) {
+            agents.splice(index, 1);
+        }
     }
 }
 
@@ -188,6 +204,7 @@ function toggleTool(tool) {
     drawBtn.classList.toggle("active", currentTool === "draw");
     eraseBtn.classList.toggle("active", currentTool === "erase");
     agentBtn.classList.toggle("active", currentTool === "addAgent");
+    removeAgentBtn.classList.toggle("active", currentTool === "removeAgent");
 }
 
 
@@ -209,6 +226,10 @@ function drawAgents() {
 
 function isAgentAt(row, col) {
     return agents.some(a => a.row === row && a.col === col);
+}
+
+function getAgentIndexAt(row, col) {
+    return agents.findIndex(a => a.row === row && a.col === col);
 }
 
 drawTilemap();
@@ -233,4 +254,21 @@ function drawHoverPreview() {
 
     ctx.strokeStyle = "#666";
     ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+};
+
+function clearTileMap() {
+    for (let row = 0; row < MAP_ROWS; row++) {
+        for (let col = 0; col < MAP_COLS; col++) {
+            tilemap[row][col] = 0;
+        }
+    }
+
+    // reset editor tools
+    currentTool = null;
+    isPainting = false;
+    hoveredTile = null;
+
+    // update ui
+    drawBtn.classList.remove("active")
+    eraseBtn.classList.remove("active")
 }

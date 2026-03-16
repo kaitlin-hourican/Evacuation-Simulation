@@ -1,58 +1,73 @@
-import { TILE_COLOURS, DEFAULT_COLOURS } from "./constants.js";
+// handles the grid structure for the simulation
+// stores the tilemap, manages tile access, and handles rendering to the canvas
+
+import { TILE_COLOURS, DEFAULT_COLOURS, TILE_TYPES } from "./constants.js";
 
 export class Grid {
     constructor(canvas, cols, rows, tileSize) {
+        // canvas and drawing context
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
+
+        // grid dimensions
         this.cols = cols;
         this.rows = rows;
         this.tileSize = tileSize;
+
+        // internal 2d array storing tile types
         this.tilemap = this.#createTilemap();
 
+        // resize canvas to match grid dimensions
         canvas.width = cols * tileSize;
         canvas.height = rows * tileSize;
     }
 
-    // creates initial tilemap using 2d array 
+    // creates the initial tilemap as a 2d array
+    // every tile starts as EMPTY
     #createTilemap() {
         const tilemap = [];
+
         for (let row = 0; row < this.rows; row++) {
             const rowArray = [];
+
             for (let col = 0; col < this.cols; col++) {
-                // default tile value of 0
-                rowArray.push(0); 
+                rowArray.push(TILE_TYPES.EMPTY);
             }
+
             tilemap.push(rowArray);
         }
+
         return tilemap;
     }
 
-    // checks whether tile actually exists - ie if tile is within boundaries
-    // row must be - min 0 (top) and less than total rows (bottom)
-    // col must be - min 0 (left side) and less than total cols (right side)
+    // checks if a row and column are within grid bounds
+    // prevents accessing tiles outside the tilemap
     #inBounds(row, col) {
         return row >= 0 && row < this.rows && col >= 0 && col < this.cols;
     }
 
+    // draws the entire grid to the canvas
+    // iterates through the tilemap and renders each tile
     draw() {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
-                // find tile value 
-                // 0 = empty
-                // 1 = obstacle
-                // 2 = goal
+
+                // get tile type stored at this position
                 const tileValue = this.tilemap[row][col];
 
-                // convert grid to px
+                // convert grid position to canvas pixel position
                 const x = col * this.tileSize;
                 const y = row * this.tileSize;
 
-                // colour tile based on value 
+                // get colours for this tile type
+                // fallback to default colours if tile type is unknown
                 const colours = TILE_COLOURS[tileValue] ?? DEFAULT_COLOURS;
 
+                // draw filled tile
                 this.ctx.fillStyle = colours.fill;
                 this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
 
+                // draw tile border
                 this.ctx.strokeStyle = colours.stroke;
                 this.ctx.lineWidth = 0.5;
                 this.ctx.strokeRect(x, y, this.tileSize, this.tileSize);
@@ -60,44 +75,41 @@ export class Grid {
         }
     }
 
-    // sets specific tile value
+    // sets the tile at a given row and column to a new type
+    // ignores the request if the tile is outside the grid
     setTile(row, col, value) {
-        // check if tile is actually part of tilemap
         if (!this.#inBounds(row, col)) return;
-
-        // change tile value
         this.tilemap[row][col] = value;
     }
 
-    // gets specific tile value
+    // returns the tile type at a given position
+    // returns null if the position is outside the grid
     getTile(row, col) {
-        // check tile exists
         if (!this.#inBounds(row, col)) return null;
-
-        // return value of tile
         return this.tilemap[row][col];
     }
 
-    // checks if pedestrian/agent can actually walk on tile 
-    // ie if value is 0 (empty)
+    // checks whether a tile can be walked on by an agent
+    // currently only EMPTY tiles are walkable
     isWalkable(row, col) {
-        // check tile exists in tilemap - if false then not walkable
         if (!this.#inBounds(row, col)) return false;
-
-        // return bool - true = empty/walkable, false = obstacle
-        return this.tilemap[row][col] === 0;
+        return this.tilemap[row][col] === TILE_TYPES.EMPTY;
     }
 
-    // convert px val to specific tile
-    // px coords top-left corner
+    // converts canvas pixel coordinates to a grid tile position
+    // useful for mapping mouse clicks to tiles
+    // returns null if the pixel lies outside the grid
     pixelToTile(x, y) {
         const col = Math.floor(x / this.tileSize);
         const row = Math.floor(y / this.tileSize);
+
         if (!this.#inBounds(row, col)) return null;
+
         return { row, col };
     }
 
-    // converts tile to px coords of top-left corner
+    // converts a tile position to the pixel coordinates
+    // of the tile's top left corner
     tileToPixel(row, col) {
         return {
             x: col * this.tileSize,
@@ -105,11 +117,11 @@ export class Grid {
         };
     }
 
-    // reset all tiles to default value (0)
+    // clears the grid by resetting all tiles to EMPTY
     clear() {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
-                this.tilemap[row][col] = 0;
+                this.tilemap[row][col] = TILE_TYPES.EMPTY;
             }
         }
     }

@@ -1,43 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <canvas id="simCanvas"></canvas>
-    <button id="drawBtn">Draw</button>
-    <button id="eraseBtn">Erase</button>
-    <button id="clearBtn">Clear All</button>
-    <button id="addAgentBtn">Add Agents</button>
-    <button id="removeAgentBtn">Remove Agents</button>
-    <!-- <div id="controlPanel">
-        <div id="modeToggle">
-            <input type="radio" id="edit" name="modeSelection" value="edit">
-            <label for="edit">Edit</label>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evacuation Simulation</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- modebar -->
+    <header id="abms-modebar">
+      <span class="app-title">ABMS <span>//</span> Pedestrian Sim</span>
+      <span class="mode-indicator" id="mode-indicator">
+        <span class="dot"></span>
+        <span id="mode-label">edit</span>
+      </span>
+      <button id="btn-mode-toggle">Run Simulation</button>
+    </header>
+
+    <!-- toolbar -->
+    <div id="abms-panel">
+      <div class="panel-inner">
+        <span class="panel-label">Grid Editor</span>
+
+        <div class="tool-group">
+          <span class="group-label">Terrain</span>
+          <div class="tool-row">
+            <button class="tool-btn active" id="btn-draw">Draw</button>
+            <button class="tool-btn" id="btn-erase">Erase</button>
+          </div>
         </div>
 
-        <div id="editorTools">
-            <button id="drawWallsBtn">Draw Walls</button>
-            <button id="placeExitBtn">Place Exit</button>
-            <button id="placeAgentsBtn">Place Agents</button>
-            <button id="eraserBtn">Erase</button>
-            <button id="clearAllBtn">Clear All</button>
+        <div class="tool-group">
+          <span class="group-label">Zones</span>
+          <div class="tool-row">
+            <button class="tool-btn" id="btn-goal">Goal</button>
+          </div>
         </div>
 
-        <div id="simulationTools">
-            <button id="startBtn">Start</button>
-            <button id="pauseBtn">Pause</button>
-            <button id="resetBtn">Reset</button>
-
-            <label for="numAgentsInput">Number of Agents</label>
-            <input type="number" id="numAgentsInput" default="20">
-
-
+        <div class="tool-group">
+          <span class="group-label">Map</span>
+          <div class="tool-row">
+            <button class="tool-btn danger" id="btn-clear">Clear</button>
+          </div>
         </div>
-    </div> -->
-    <script src="main.js"></script>
-</body>
+      </div>
+    </div>
+
+    <!-- canvas -->
+    <div id="canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
 </html>

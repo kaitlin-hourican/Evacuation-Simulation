@@ -1,274 +1,74 @@
-const canvas = document.getElementById("simCanvas");
-const ctx = canvas.getContext("2d");
+import { Grid } from './engine/Grid.js';
+import { Toolbar } from './engine/Toolbar.js';
 
-const drawBtn = document.getElementById("drawBtn");
-const eraseBtn = document.getElementById("eraseBtn");
-const clearBtn = document.getElementById("clearBtn");
-const agentBtn = document.getElementById("addAgentBtn");
-const removeAgentBtn = document.getElementById("removeAgentBtn");
+const ui = new Toolbar(); 
 
-// tilemap config
-const TILE_SIZE = 32; // each tile 32px
-const MAP_COLS = 20; // width in tiles
-const MAP_ROWS = 15; // height in tiles
+const canvas = document.getElementById('simCanvas');
 
-// set canvas size based on tile grid
-canvas.width = MAP_COLS * TILE_SIZE;
-canvas.height = MAP_ROWS * TILE_SIZE;
+// Size the grid to fill the available viewport (below the fixed modebar).
+// Tile size is derived from how many tiles fit, keeping a small margin.
+const MODEBAR_H = 48;
+const MARGIN    = 32;
+const MAP_COLS  = 20;
+const MAP_ROWS  = 15;
 
-// create tilemap
-// 0 = empty (white, non-collidable)
-// 1 = obstacle (black, collidable)
-const tilemap = [];
+const availW   = window.innerWidth  - MARGIN * 2;
+const availH   = window.innerHeight - MODEBAR_H - MARGIN * 2;
+const tileSize = Math.floor(Math.min(availW / MAP_COLS, availH / MAP_ROWS));
 
-// flags
-let currentTool = null;
-let isPainting = false;
-let drawModeEnabled = false;
-let hoveredTile = null;
+const grid = new Grid(canvas, MAP_COLS, MAP_ROWS, tileSize);
 
-// event listeners
+let currentTool = 'draw';
+let isPainting  = false;
+let paintValue  = 1;
 
-drawBtn.addEventListener("click", () => {
-    toggleTool("draw");
-})
+// ── Tool/mode events from Toolbar ──────────────────────────────────────────
 
-eraseBtn.addEventListener("click", () => {
-    toggleTool("erase");
-})
+document.addEventListener('tool-change', e => {
+    if (e.detail === 'clear') { grid.clear(); grid.draw(); return; }
+    currentTool = e.detail;
+});
 
-clearBtn.addEventListener("click", clearTileMap);
+document.addEventListener('mode-change', e => {
+    canvas.style.cursor = e.detail === 'edit' ? 'crosshair' : 'default';
+});
 
-agentBtn.addEventListener("click", () => {
-    toggleTool("addAgent");
-})
+// ── Canvas painting ───────────────────────────────────────────────────────────
 
-removeAgentBtn.addEventListener("click", () => {
-    toggleTool("removeAgent");
-})
-
-
-canvas.addEventListener("pointerdown", onPointerDown);
-canvas.addEventListener("pointermove", onPointerMove);
-canvas.addEventListener("pointerup", onPointerUp);
-canvas.addEventListener("pointerleave", onPointerUp);
-canvas.addEventListener("pointerleave", () => {
-    hoveredTile = null;
-    isPainting = false;
-    drawTilemap();
-})
-
-// event handlers
-function handleCanvasClick(event) {
-    // set coord to canvas position not window
-    const rect = canvas.getBoundingClientRect();
-
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
-
-    // convert from px to grid coord
-    const col = Math.floor(mouseX / TILE_SIZE);
-    const row = Math.floor(mouseY / TILE_SIZE);
-
-    toggleTile(row, col);
-};
-
-function getTileFromPointer(event) {
-    const rect = canvas.getBoundingClientRect();
-
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    const col = Math.floor(x / TILE_SIZE);
-    const row = Math.floor(y / TILE_SIZE);
-
-    return { row, col };
-}
-
-function onPointerDown(event) {
-    if (!currentTool) return;
-
+canvas.addEventListener('mousedown', e => {
+    if (ui.mode !== 'edit') return;
     isPainting = true;
+    paintValue = (e.button === 2 || currentTool === 'erase') ? 0 : 1;
+    paint(e);
+});
 
-    const { row, col } = getTileFromPointer(event);
-    applyTool(row, col);
+canvas.addEventListener('mousemove', e => {
+    if (isPainting) paint(e);
+});
 
-    drawTilemap();
-}
+window.addEventListener('mouseup', () => { isPainting = false; });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-function onPointerMove(event) {
-     if (!currentTool) return;
-
-    const { row, col } = getTileFromPointer(event);
-
-    // update hover state ALWAYS
-    if (
-        row >= 0 && row < MAP_ROWS &&
-        col >= 0 && col < MAP_COLS
-    ) {
-        hoveredTile = { row, col };
-    } else {
-        hoveredTile = null;
-    }
-
-    // only apply tool while painting
-    if (isPainting) {
-        applyTool(row, col);
-    }
-
-    drawTilemap();
-}
-
-function onPointerUp() {
-    isPainting = false;
-    lastPaintedTile = null;
-}
-
-// fill tilempa
-for (let row = 0; row < MAP_ROWS; row++) {
-    const rowArray = [];
-
-    for (let col = 0; col < MAP_COLS; col++) {
-        rowArray.push(0);   // 0 = empty/non-collidable
-    }
-    tilemap.push(rowArray);
-};
-
-function drawTilemap() {
-    // iterate through each tile and draw according to value
-    for (let row = 0; row < MAP_ROWS; row++) {
-        for (let col = 0; col < MAP_COLS; col++) {
-            const tileValue = tilemap[row][col];
-
-            if (tileValue === 0) {
-                ctx.fillStyle = "#ffffff";
-            } else if (tileValue === 1) {
-                ctx.fillStyle = "#000000";
-            }
-
-            // convert grid coord to px coord
-            const x = col * TILE_SIZE;
-            const y = row * TILE_SIZE;
-
-            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
-            // grid lines
-            ctx.strokeStyle = "#cccacaff";
-            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-        }
-    }
-    drawHoverPreview();
-
-    drawAgents();
-};
-
-
-let lastPaintedTile = null; 
-
-function applyTool(row, col) {
-    if (row < 0 || row >= MAP_ROWS || 
-        col < 0 || col >= MAP_COLS
-    ) return;
-
-    if (currentTool === "draw" && isAgentAt(row, col)) return;
-    if (currentTool === "erase" && isAgentAt(row, col)) return;
+function paint(e) {
+    const rect = canvas.getBoundingClientRect();
+    const tile = grid.pixelToTile(
+        (e.clientX - rect.left) * (canvas.width / rect.width),
+        (e.clientY - rect.top)  * (canvas.height / rect.height)
+    );
+    if (!tile) return;
 
     if (currentTool === "draw") {
-        tilemap[row][col] = 1;
+        grid.setTile(tile.row, tile.col, 1);
+        grid.draw();
     } else if (currentTool === "erase") {
-        tilemap[row][col] = 0;
-    } else if (currentTool === "addAgent") {
-        if (tilemap[row][col] === 1) return;
-        if (isAgentAt(row, col)) return;
-        agents.push({ row, col });
-    } else if (currentTool === "removeAgent") {
-        if (!isAgentAt(row, col)) return;   
-
-        const index = getAgentIndexAt(row, col);
-        if (index !== -1) {
-            agents.splice(index, 1);
-        }
+        grid.setTile(tile.row, tile.col, 0);
+        grid.draw();
+    } else if (currentTool === "goal") {
+        grid.setTile(tile.row, tile.col, 2);
+        grid.draw();
     }
+    
 }
 
-function toggleTool(tool) {
-    if (currentTool === tool) {
-        currentTool = null;
-    } else {
-        currentTool = tool;
-    }
-
-    // stop drawing when switching tools
-    isPainting = false;
-
-    drawBtn.classList.toggle("active", currentTool === "draw");
-    eraseBtn.classList.toggle("active", currentTool === "erase");
-    agentBtn.classList.toggle("active", currentTool === "addAgent");
-    removeAgentBtn.classList.toggle("active", currentTool === "removeAgent");
-}
-
-
-const agents = [];
-
-function drawAgents() {
-    ctx.fillStyle = "#0077ff";
-
-    for (const agent of agents) {
-        const centerX = agent.col * TILE_SIZE + TILE_SIZE / 2;
-        const centerY = agent.row * TILE_SIZE + TILE_SIZE / 2;
-        const radius = TILE_SIZE * 0.35;
-
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.fill();
-    }
-}
-
-function isAgentAt(row, col) {
-    return agents.some(a => a.row === row && a.col === col);
-}
-
-function getAgentIndexAt(row, col) {
-    return agents.findIndex(a => a.row === row && a.col === col);
-}
-
-drawTilemap();
-
-
-
-function drawHoverPreview() {
-    if (!hoveredTile || !currentTool || isPainting) return;
-
-    const { row, col } = hoveredTile;
-
-    const x = col * TILE_SIZE;
-    const y = row * TILE_SIZE;
-
-    if (currentTool === "draw") {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-    } else if (currentTool === "erase") {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    }
-
-    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
-    ctx.strokeStyle = "#666";
-    ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
-};
-
-function clearTileMap() {
-    for (let row = 0; row < MAP_ROWS; row++) {
-        for (let col = 0; col < MAP_COLS; col++) {
-            tilemap[row][col] = 0;
-        }
-    }
-
-    // reset editor tools
-    currentTool = null;
-    isPainting = false;
-    hoveredTile = null;
-
-    // update ui
-    drawBtn.classList.remove("active")
-    eraseBtn.classList.remove("active")
-}
+// initial draw
+grid.draw();

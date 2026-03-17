@@ -5,6 +5,7 @@
 import { Grid } from './engine/Grid.js';
 import { Toolbar } from './engine/Toolbar.js';
 import { tools } from './engine/tools.js';
+import { Flowfield } from './engine/Flowfield.js';
 
 // initialise toolbar ui controller
 const ui = new Toolbar();
@@ -32,6 +33,13 @@ const tileSize = Math.floor(Math.min(
 
 // create grid instance
 const grid = new Grid(canvas, MAP_COLS, MAP_ROWS, tileSize);
+const flowfield = new Flowfield(grid);
+
+const computeBtn = document.getElementById("btn-compute");
+computeBtn.addEventListener("click", () => { 
+    flowfield.compute();
+    flowfield.drawHeatMap(canvas.getContext("2d"));
+})
 
 
 // tool state tracking

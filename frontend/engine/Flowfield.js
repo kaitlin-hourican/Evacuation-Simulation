@@ -41,13 +41,9 @@ export class Flowfield {
   #seedGoals() {
     const queue = [];
 
-    for (let row = 0; row < this.grid.rows; row++) {
-      for (let col = 0; col < this.grid.cols; col++) {
-        if (this.grid.getTile(row, col) === TILE_TYPES.GOAL) {
-          this.costField[row][col] = 0;
-          queue.push({ row, col });
-        }
-      }
+    for (const { row, col } of this.grid.getGoalCells()) {
+      this.costField[row][col] = 0;
+      queue.push({ row, col });
     }
 
     return queue;

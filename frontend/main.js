@@ -14,8 +14,8 @@ const availW   = window.innerWidth  - MARGIN * 2;
 const availH   = window.innerHeight - MODEBAR_H - MARGIN * 2;
 const tileSize = Math.floor(Math.min(availW / MAP_COLS, availH / MAP_ROWS));
 
-const ui        = new Toolbar();
 const grid      = new Grid(canvas, MAP_COLS, MAP_ROWS, tileSize);
+const ui        = new Toolbar(grid);
 const flowfield = new Flowfield(grid);
 const input     = new InputHandler(canvas, grid, ui, flowfield);
 

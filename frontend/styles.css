@@ -167,6 +167,28 @@ html, body {
     border-right: 1px solid var(--border);
 }
 
+/* === status messages === */
+#status-message {
+    position: fixed;
+    top: var(--modebar-h);
+    left: 0; right: 0;
+    z-index: 98;
+    padding: 6px 24px;
+    background: var(--danger-dim);
+    border-bottom: 1px solid var(--danger);
+    color: var(--danger);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#status-message.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-100%);
+}
+
 /* === tool groups === */
 
 .tool-group {
@@ -241,3 +263,4 @@ html, body {
     border: 1px solid var(--border);
     box-shadow: 0 0 80px rgba(240, 180, 41, 0.05);
 }
+

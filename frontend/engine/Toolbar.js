@@ -2,7 +2,9 @@
 // manages mode switching, tool selection, and dispatches events for the rest of the app
 
 export class Toolbar {
-    constructor() {
+    constructor(grid) {
+        this._grid = grid;
+
         // current application mode
         // edit allows map editing, run starts the simulation
         this.mode = "edit";
@@ -26,6 +28,10 @@ export class Toolbar {
         // utility buttons
         this._btnClear      = document.getElementById("btn-clear");
 
+        // status message
+        this._statusText    = document.getElementById("status-text");
+        this._statusMessage = document.getElementById("status-message");
+
         // attach event listeners
         this._bindEvents();
     }
@@ -36,7 +42,15 @@ export class Toolbar {
 
         // toggle between edit mode and run mode
         this._modeBtn.addEventListener("click", () => {
-            this._setMode(this.mode === "edit" ? "run" : "edit");
+            const nextMode = this.mode === "edit" ? "run" : "edit";
+
+            if (nextMode === "run" && !this._grid.hasGoal()) {
+                this._showStatus("Place a goal cell before running");
+                return;
+            }
+
+            this._clearStatus();
+            this._setMode(nextMode);
         });
 
         // tool selection buttons
@@ -90,4 +104,17 @@ export class Toolbar {
         // notify the application that the tool changed 
         document.dispatchEvent(new CustomEvent("tool-change", { detail: tool })); 
     } 
+
+    _showStatus(message) {
+        this._statusText.textContent = message;
+        this._statusMessage.classList.remove("hidden");
+
+        clearTimeout(this._statusTimer);
+        this._statusTimer = setTimeout(() => this._clearStatus(), 7000);
+    }
+
+    _clearStatus() {
+        this._statusMessage.classList.add("hidden");
+        this._statusText.textContent = "";
+    }
 }

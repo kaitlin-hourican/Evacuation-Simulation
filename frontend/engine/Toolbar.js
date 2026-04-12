@@ -44,10 +44,23 @@ export class Toolbar {
         this._modeBtn.addEventListener("click", () => {
             const nextMode = this.mode === "edit" ? "run" : "edit";
 
-            if (nextMode === "run" && !this._grid.hasGoal()) {
-                this._showStatus("Place a goal cell before running");
-                return;
+            if (nextMode === "run") {
+                if (!this._grid.hasGoal() && !this._grid.hasSpawn()) {
+                    this._showStatus("Place a goal and spawn zone before running");
+                    return;
+                }
+
+                if (!this._grid.hasGoal()) {
+                    this._showStatus("Place a goal cell before running");
+                    return;
+                }
+
+                if (!this._grid.hasSpawn()) {
+                    this._showStatus("Place a spawn cell before running");
+                    return;
+                }
             }
+
 
             this._clearStatus();
             this._setMode(nextMode);

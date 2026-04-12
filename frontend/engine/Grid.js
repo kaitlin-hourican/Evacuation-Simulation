@@ -114,6 +114,26 @@ export class Grid {
     return goals;
   }
 
+  hasSpawn() {
+    return this.getSpawnCells().length > 0;
+  }
+
+  getSpawnCells() {
+    const spawn = [];
+
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+
+        if (this.getTile(row, col) === TILE_TYPES.SPAWN) {
+          spawn.push({ row, col });
+        }
+      }
+    }
+
+    return spawn;
+  }
+
+
   // converts canvas pixel coordinates to a grid tile position
   // useful for mapping mouse clicks to tiles
   // returns null if the pixel lies outside the grid

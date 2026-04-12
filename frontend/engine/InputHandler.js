@@ -5,16 +5,21 @@ export class InputHandler {
   #ui;
   #canvas;
   #flowfield;
+  #simulation;
+
+  #onRender;
 
   #currentTool = "draw";
   #activeTool = "draw";
   #isPainting = false;
 
-  constructor(canvas, grid, ui, flowfield) {
+  constructor(canvas, grid, ui, flowfield, simulation, onRender) {
     this.#canvas = canvas;
     this.#grid = grid;
     this.#ui = ui;
     this.#flowfield = flowfield;
+    this.#simulation = simulation;
+    this.#onRender = onRender;
   }
 
   init() {
@@ -54,6 +59,13 @@ export class InputHandler {
   
     if (e.detail === "run") {
         this.#flowfield.compute();
+        this.#simulation.spawnAgents();
+        this.#onRender();
+    }
+
+    if (e.detail === "edit") {
+      this.#simulation.clear();
+      this.#onRender();
     }
 }
 

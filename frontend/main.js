@@ -26,5 +26,6 @@ render();
 
 function render() {
     grid.draw();
+    flowfield.drawVectorField(canvas.getContext("2d"));
     simulation.draw();
 }

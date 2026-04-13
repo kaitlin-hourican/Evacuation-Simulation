@@ -47,7 +47,7 @@ export class InputHandler {
   #onToolChange(e) {
     if (e.detail === "clear") {
         this.#grid.clear();
-        this.#grid.draw();
+        this.#onRender();
         return;
     }
 
@@ -80,7 +80,7 @@ export class InputHandler {
 
     if (tools[this.#activeTool]) {
         tools[this.#activeTool](this.#grid, tile);
-        this.#grid.draw();
+        this.#onRender();
     }
   }
 }

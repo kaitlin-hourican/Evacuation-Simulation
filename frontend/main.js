@@ -18,7 +18,7 @@ const tileSize = Math.floor(Math.min(availW / MAP_COLS, availH / MAP_ROWS));
 const grid          = new Grid(canvas, MAP_COLS, MAP_ROWS, tileSize);
 const ui            = new Toolbar(grid);
 const flowfield     = new Flowfield(grid);
-const simulation    = new Simulation(grid, flowfield, canvas.getContext("2d"), 10);
+const simulation    = new Simulation(grid, flowfield, canvas.getContext("2d"), 10, render);
 const input         = new InputHandler(canvas, grid, ui, flowfield, simulation, render);
 
 input.init();
@@ -26,6 +26,7 @@ render();
 
 function render() {
     grid.draw();
-    flowfield.drawVectorField(canvas.getContext("2d"));
+    // flowfield.drawHeatmap(canvas.getContext("2d"));          test heatmap is working correctly
+    // flowfield.drawVectorField(canvas.getContext("2d"));      test vector field working correctly 
     simulation.draw();
 }

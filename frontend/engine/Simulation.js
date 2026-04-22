@@ -1,10 +1,16 @@
 import { Agent } from "./Agent.js";
 
 export class Simulation {
-    constructor(grid, flowfield, ctx, agentCount) {
+
+    #running = false;
+    #animFrameId = null;
+    #onRender;
+
+    constructor(grid, flowfield, ctx, agentCount, onRender) {
         this.grid = grid;
         this.flowfield = flowfield;
         this.ctx = ctx;
+        this.#onRender = onRender;
         this.agentCount = agentCount;
         this.agents = [];
     }
@@ -44,5 +50,30 @@ export class Simulation {
 
     clear() {
         this.agents = [];
+    }
+
+    start() {
+        this.#running = true;
+        this.#update();
+    }
+
+    #update() {
+        if (!this.#running) return;
+
+        this.agents = this.agents.filter(agent => !agent.update(this.flowfield));
+        
+        if (this.agents.length === 0) {
+            this.stop();
+            this.#onRender();
+            return;
+        }
+
+        this.#onRender();
+        this.#animFrameId = requestAnimationFrame(() => this.#update());
+    }
+
+    stop() {
+        this.#running = false;
+        cancelAnimationFrame(this.#animFrameId);
     }
 }

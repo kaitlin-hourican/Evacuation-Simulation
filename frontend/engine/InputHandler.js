@@ -60,10 +60,12 @@ export class InputHandler {
     if (e.detail === "run") {
         this.#flowfield.compute();
         this.#simulation.spawnAgents();
+        this.#simulation.start();
         this.#onRender();
     }
 
     if (e.detail === "edit") {
+      this.#simulation.stop();
       this.#simulation.clear();
       this.#onRender();
     }

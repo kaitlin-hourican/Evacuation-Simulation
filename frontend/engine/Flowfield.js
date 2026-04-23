@@ -2,10 +2,8 @@ export class Flowfield {
   constructor(grid) {
     this.grid = grid;
     this.neighbours = [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
+      [-1,  0], [1,  0], [0, -1], [0,  1],  // cardinal
+      [-1, -1], [-1, 1], [1, -1], [1,  1]   // diagonal
     ];
 
     this.costField = []; // distance cost to goal per cell

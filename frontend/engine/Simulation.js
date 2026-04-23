@@ -4,6 +4,7 @@ export class Simulation {
 
     #running = false;
     #animFrameId = null;
+    #lastTime = null;
     #onRender;
 
     constructor(grid, flowfield, ctx, agentCount, onRender) {
@@ -54,22 +55,30 @@ export class Simulation {
 
     start() {
         this.#running = true;
-        this.#update();
+        this.#lastTime = null;
+        this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
     }
 
-    #update() {
+    #update(timestamp) {
         if (!this.#running) return;
 
-        this.agents = this.agents.filter(agent => !agent.update(this.flowfield));
-        
-        if (this.agents.length === 0) {
+        const deltaTime = this.#lastTime
+            ? (timestamp - this.#lastTime) / 1000
+            : 0;
+        this.#lastTime = timestamp;
+
+        console.log("tick", deltaTime, this.agents.length);
+
+        this.agents = this.agents.filter(agent => !agent.update(this.flowfield, deltaTime, this.agents));
+
+          if (this.agents.length === 0) {
             this.stop();
             this.#onRender();
             return;
         }
 
         this.#onRender();
-        this.#animFrameId = requestAnimationFrame(() => this.#update());
+        this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
     }
 
     stop() {

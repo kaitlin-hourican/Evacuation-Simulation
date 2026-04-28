@@ -92,7 +92,7 @@ export class Grid {
   // currently only EMPTY tiles are walkable
   isWalkable(row, col) {
     if (!this.#inBounds(row, col)) return false;
-    return this.tilemap[row][col] !== TILE_TYPES.WALL;
+    return this.tilemap[row][col] !== TILE_TYPES.OBSTACLE;
   }
 
   hasGoal() {

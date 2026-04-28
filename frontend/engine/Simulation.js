@@ -7,10 +7,11 @@ export class Simulation {
     #lastTime = null;
     #onRender;
 
-    constructor(grid, flowfield, ctx, agentCount, onRender) {
+    constructor(grid, flowfield, ctx, agentCount, scale, onRender) {
         this.grid = grid;
         this.flowfield = flowfield;
         this.ctx = ctx;
+        this.scale = scale;
         this.#onRender = onRender;
         this.agentCount = agentCount;
         this.agents = [];
@@ -36,10 +37,12 @@ export class Simulation {
 
         // calculate centre px coords
         selected.forEach(cell => {
-            const x = cell.col * this.grid.tileSize + this.grid.tileSize / 2;
-            const y = cell.row * this.grid.tileSize + this.grid.tileSize / 2;
+            const pixelX = cell.col * this.grid.tileSize + this.grid.tileSize / 2;
+            const pixelY = cell.row * this.grid.tileSize + this.grid.tileSize / 2;
+            const x = pixelX / this.scale;
+            const y = pixelY / this.scale;
             
-            this.agents.push(new Agent(x, y, this.grid.tileSize));
+            this.agents.push(new Agent(x, y, this.grid.tileSize, this.scale));
         })
 
 
@@ -66,8 +69,6 @@ export class Simulation {
             ? (timestamp - this.#lastTime) / 1000
             : 0;
         this.#lastTime = timestamp;
-
-        console.log("tick", deltaTime, this.agents.length);
 
         this.agents = this.agents.filter(agent => !agent.update(this.flowfield, deltaTime, this.agents));
 

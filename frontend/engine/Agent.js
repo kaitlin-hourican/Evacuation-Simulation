@@ -1,42 +1,48 @@
 import { TILE_TYPES } from "./constants.js";
 
 export class Agent {
-    constructor(x, y, tileSize) {
+    constructor(x, y, tileSize, scale) {
         this.x = x;
         this.y = y;
         this.tileSize = tileSize;
-        this.radius = tileSize * 0.3;
+        this.scale = scale;
+        this.radius = 0.3;
 
-        this.speed = 1.5;
         this.velocity = { x: 0, y: 0 };
-        this.mass = 1;
-        this.desiredSpeed = this.tileSize * 3;
+        this.mass = 80;
+        this.desiredSpeed = 1.5;
         this.relaxationTime = 0.5;
 
         this.repulsionA = 2000;
-        this.repulsionB = this.tileSize * 0.5;
-        this.repulsionCutoff = this.tileSize * 3;
+        this.repulsionB = 0.08;
+        this.repulsionCutoff = 3;
+
+        this.wallRepulsionA = 2000;
+        this.wallRepulsionB = 0.08;
     }
 
     draw(ctx) {
+        const px = this.x * this.scale;
+        const py = this.y * this.scale;
+        const pr = this.radius * this.scale;
+
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
         ctx.fillStyle = "#cdd9e5";
         ctx.fill();
     }
 
     update(flowfield, deltaTime, agents) {
         // get repulsion force
-        const repulsionForce = this.#calculateRepulsion(agents);
+        const agentRepulsionForce = this.#calculateRepulsion(agents);
+        const wallRepulsionForce = this.#calculateWallRepulsion(flowfield);
 
         // get current position
-        const col = Math.floor(this.x / this.tileSize);
-        const row = Math.floor(this.y / this.tileSize);
+        const col = Math.floor((this.x * this.scale) / this.tileSize);
+        const row = Math.floor((this.y * this.scale) / this.tileSize);
 
         // get vector for position
         const vector = flowfield.getVector(row, col);
-
-          console.log("agent vector", vector, "deltaTime", deltaTime, "velocity", this.velocity);
 
         // if cell type is goal - remove
         const tileValue = flowfield.grid.getTile(row, col);
@@ -56,8 +62,8 @@ export class Agent {
 
         // total force
         const totalForce = {
-            x: drivingForce.x + repulsionForce.x,
-            y: drivingForce.y + repulsionForce.y
+            x: drivingForce.x + agentRepulsionForce.x + wallRepulsionForce.x,
+            y: drivingForce.y + agentRepulsionForce.y + wallRepulsionForce.y
         };
 
         // apply force to velocity 
@@ -107,7 +113,7 @@ export class Agent {
             const nij = { x: dx / dij, y: dy / dij };
 
             // Calculates repulsion magnitude: A * exp((rij - dij) / B)
-            const repulsionMagnitude = this.repulsionA * Math.exp(rij - dij) / this.repulsionB;
+            const repulsionMagnitude = this.repulsionA * Math.exp((rij - dij) / this.repulsionB);
         
             // Adds magnitude * nij to the repulsion force
             repulsionForce.x += repulsionMagnitude * nij.x;
@@ -116,5 +122,53 @@ export class Agent {
 
         // Returns the total repulsion force 
         return repulsionForce;
+    }
+
+    #calculateWallRepulsion(flowfield) {
+        // Initialise force { x: 0, y: 0 }
+        const repulsionForce = { x: 0, y: 0 };
+
+        // Loop the 8 Moore neighbours plus current tile
+        const mooreNeighbours = [
+            [0, 0],                               // current position
+            [-1,  0], [1,  0], [0, -1], [0,  1],  // cardinal
+            [-1, -1], [-1, 1], [1, -1], [1,  1]   // diagonal
+        ];
+
+        // get current position
+        const currentCol = Math.floor((this.x * this.scale) / this.tileSize);
+        const currentRow = Math.floor((this.y * this.scale) / this.tileSize);
+
+        for (const [dr, dc] of mooreNeighbours) {
+            const row = currentRow + dr;
+            const col = currentCol + dc;
+
+            // Skip if not an obstacle tile — use flowfield.grid.getTile()
+            if (flowfield.grid.getTile(row, col) !== TILE_TYPES.OBSTACLE) continue;
+
+            // Calculate pixel distance from agent centre to obstacle tile centre
+            const wallX = (col * this.tileSize + this.tileSize / 2) / this.scale;
+            const wallY = (row * this.tileSize + this.tileSize / 2) / this.scale;
+
+            const dx = this.x - wallX;
+            const dy = this.y - wallY;
+            const dij = Math.sqrt(dx * dx + dy * dy);
+
+            // Skip if distance > cutoff
+            if (dij === 0 || dij > this.repulsionCutoff) continue;
+
+            // Calculates nij — normalised vector 
+            const nij = { x: dx / dij, y: dy / dij };
+
+            // Calculate magnitude and add to force
+            const repulsionMagnitude = this.wallRepulsionA * Math.exp((this.radius - dij) / this.wallRepulsionB);
+        
+            // Adds magnitude * nij to the repulsion force
+            repulsionForce.x += repulsionMagnitude * nij.x;
+            repulsionForce.y += repulsionMagnitude * nij.y;
+        }
+
+        return repulsionForce;
+    
     }
 }

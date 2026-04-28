@@ -11,7 +11,7 @@ export const tools = {
     // places a wall or obstacle tile
     // used to block pedestrian movement
     draw: (grid, tile) =>
-        grid.setTile(tile.row, tile.col, TILE_TYPES.WALL),
+        grid.setTile(tile.row, tile.col, TILE_TYPES.OBSTACLE),
 
     // removes any placed tile and restores empty walkable space
     erase: (grid, tile) =>

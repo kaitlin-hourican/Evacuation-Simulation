@@ -24,6 +24,6 @@ render();
 function render() {
     grid.draw();
     // flowfield.drawHeatmap(canvas.getContext("2d"));       //   test heatmap is working correctly
-    // flowfield.drawVectorField(canvas.getContext("2d"));      // test vector field working correctly 
+    flowfield.drawVectorField(canvas.getContext("2d"));      // test vector field working correctly 
     simulation.draw(SCALE);
 }

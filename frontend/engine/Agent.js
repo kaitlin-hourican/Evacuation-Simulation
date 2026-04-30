@@ -8,6 +8,9 @@ export class Agent {
         this.scale = scale;
         this.radius = 0.2;
         this.speed = 1.5;
+        this.heading = 0;               // current facing angle in rad
+        this.turnRate = Math.PI * 2;    // max radiians/sec
+        this.wallAvoidance = Math.random();
     }
 
     draw(ctx) {
@@ -30,7 +33,12 @@ export class Agent {
         if (tileValue === TILE_TYPES.GOAL) return true;
 
         // move along vector
-        const vector = flowfield.getVector(row, col);
+        const vector = this.#getInterpolatedVector(flowfield);
+        const repulsion = this.#getObstacleRepulsion(flowfield);
+
+        // blend repulsion with flowfiled
+        vector.x = vector.x * 0.85 + repulsion.x * 0.15;
+        vector.y = vector.y * 0.85 + repulsion.y * 0.15;
 
         // normalise vector
         const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
@@ -52,8 +60,13 @@ export class Agent {
         }
 
         // update position
-        this.x += this.speed * normalisedVector.x * deltaTime;
-        this.y += this.speed * normalisedVector.y * deltaTime;
+        // gradually steer towards the flow field direction
+        this.#gradualTurning(vector, deltaTime);
+
+        // move in the direction of current heading
+        this.x += this.speed * Math.cos(this.heading) * deltaTime;
+        this.y += this.speed * Math.sin(this.heading) * deltaTime;
+
 
         this.#resolveAgentCollisions(agents);
 
@@ -133,4 +146,79 @@ export class Agent {
         }
     }
 
+    #getObstacleRepulsion(flowfield) {
+        const repulsionRadius = 1.5;
+        const repulsionStrength = 0.3 * this.wallAvoidance;
+
+        let repulsion = { x: 0, y: 0 };
+    
+        const agentTileX = Math.floor((this.x * this.scale) / this.tileSize);
+        const agentTileY = Math.floor((this.y * this.scale) / this.tileSize);
+        
+        // Check nearby tiles
+        for (let dx = -2; dx <= 2; dx++) {
+            for (let dy = -2; dy <= 2; dy++) {
+                if (flowfield.grid.getTile(agentTileY + dy, agentTileX + dx) === TILE_TYPES.OBSTACLE) {
+                    // Push away from this obstacle tile
+                    repulsion.x -= dx * repulsionStrength;
+                    repulsion.y -= dy * repulsionStrength;
+                }
+            }
+        }
+        
+        return repulsion;
+    }
+
+    #getInterpolatedVector(flowfield) {
+        const tileMetres = this.tileSize / this.scale;
+
+        // position in tile units (not integers - fractional position across grid)
+        const tx = (this.x / tileMetres) - 0.5;
+        const ty = (this.y / tileMetres) - 0.5;
+
+        // integer tile coords of top-left of the 4 surrounding tiles
+        const col0 = Math.floor(tx);
+        const row0 = Math.floor(ty);
+
+        // fractional part - how far between col0 and col0+1
+        const fx = tx - col0; // 0 to 1
+        const fy = ty - row0; // 0 to 1
+
+        const wTL = (1 - fx) * (1 - fy); // 0.25 * 0.75 = 0.1875
+        const wTR =      fx  * (1 - fy); // 0.75 * 0.75 = 0.5625
+        const wBL = (1 - fx) *      fy;  // 0.25 * 0.25 = 0.0625
+        const wBR =      fx  *      fy;  // 0.75 * 0.25 = 0.1875
+
+        const vTL = flowfield.getVector(row0, col0);
+        const vTR = flowfield.getVector(row0, col0 + 1);
+        const vBL = flowfield.getVector(row0 + 1, col0);
+        const vBR = flowfield.getVector(row0 + 1, col0 + 1);
+
+        return {
+            x: vTL.x * wTL + vTR.x * wTR + vBL.x * wBL + vBR.x * wBR,
+            y: vTL.y * wTL + vTR.y * wTR + vBL.y * wBL + vBR.y * wBR
+        };
+    }
+
+    #gradualTurning(vector, deltaTime) {
+        // Get desired angle from interpolated vector
+        const desiredAngle = Math.atan2(vector.y, vector.x);
+
+        // Find the shortest angular difference between current heading and desired angle
+        let angleDiff = desiredAngle - this.heading;
+
+        // Normalize angle difference to [-π, π] (handle wraparound at 2π)
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+        // Clamp difference to turnRate * deltaTime
+        const maxTurnThisFrame = this.turnRate * deltaTime;
+        const clampedDiff = Math.max(-maxTurnThisFrame, Math.min(maxTurnThisFrame, angleDiff));
+
+        // Add clamped difference to heading
+        this.heading += clampedDiff;
+
+        // Normalize heading to [0, 2π)
+        this.heading = ((this.heading % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    }
 }

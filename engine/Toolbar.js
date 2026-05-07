@@ -29,7 +29,7 @@ export class Toolbar {
       drawTile: document.getElementById("btn-draw-tile"),
       drawLine: document.getElementById("btn-draw-line"),
       drawRect: document.getElementById("btn-draw-rect"),
-      drawRectFilled: document.getElementById("btn-draw-rect-filled")
+      drawRectFilled: document.getElementById("btn-draw-rect-filled"),
     };
 
     this._typeButtons = {
@@ -43,11 +43,11 @@ export class Toolbar {
     this._toolButtons = {
       clear: document.getElementById("btn-clear"),
       import: document.getElementById("btn-import"),
-  export: document.getElementById("btn-export"),
+      export: document.getElementById("btn-export"),
     };
 
-    this.brush = "drawTile"; 
-    this.tileType = "obstacle"; 
+    this.brush = "drawTile";
+    this.tileType = "obstacle";
 
     this._params = {
       agentCount: document.getElementById("input-agent-count"),
@@ -101,31 +101,31 @@ export class Toolbar {
     this._modeBtn.addEventListener("click", () => this._handleModeToggle());
 
     // tool selection
-    // Brush buttons
-Object.keys(this._brushButtons).forEach(brushKey => {
-  this._brushButtons[brushKey].addEventListener("click", () => {
-    this._setBrush(brushKey);
-  });
-});
+    Object.keys(this._brushButtons).forEach((brushKey) => {
+      this._brushButtons[brushKey].addEventListener("click", () => {
+        this._setBrush(brushKey);
+      });
+    });
 
-// Tile type buttons
-Object.keys(this._typeButtons).forEach(typeKey => {
-  this._typeButtons[typeKey].addEventListener("click", () => {
-    this._setTileType(typeKey);
-  });
-});
+    Object.keys(this._typeButtons).forEach((typeKey) => {
+      this._typeButtons[typeKey].addEventListener("click", () => {
+        this._setTileType(typeKey);
+      });
+    });
 
-this._toolButtons.import.addEventListener("click", () => {
-  document.dispatchEvent(new CustomEvent("app-import"));
-});
+    this._toolButtons.import.addEventListener("click", () => {
+      document.dispatchEvent(new CustomEvent("app-import"));
+    });
 
-this._toolButtons.export.addEventListener("click", () => {
-  document.dispatchEvent(new CustomEvent("app-export"));
-});
+    this._toolButtons.export.addEventListener("click", () => {
+      document.dispatchEvent(new CustomEvent("app-export"));
+    });
 
-this._toolButtons.clear.addEventListener("click", () => {
-  document.dispatchEvent(new CustomEvent("app-tool-change", { detail: "clear" }));
-});
+    this._toolButtons.clear.addEventListener("click", () => {
+      document.dispatchEvent(
+        new CustomEvent("app-tool-change", { detail: "clear" }),
+      );
+    });
 
     // slider (zoom/agents/speed) +/- buttons
     this._setupSliderControls();
@@ -174,36 +174,42 @@ this._toolButtons.clear.addEventListener("click", () => {
   }
 
   _setBrush(brush) {
-  this.brush = brush;
-  Object.keys(this._brushButtons).forEach(key => {
-    this._brushButtons[key].classList.toggle("active", key === brush);
-  });
-  // Dispatch combined tool so InputHandler still works unchanged
-  document.dispatchEvent(new CustomEvent("app-tool-change", {
-    detail: { brush: this.brush, tileType: this.tileType }
-  }));
-}
+    this.brush = brush;
+    Object.keys(this._brushButtons).forEach((key) => {
+      this._brushButtons[key].classList.toggle("active", key === brush);
+    });
 
-_setTileType(type) {
-  this.tileType = type;
-  Object.keys(this._typeButtons).forEach(key => {
-    this._typeButtons[key].classList.toggle("active", key === type);
-  });
-  document.dispatchEvent(new CustomEvent("app-tool-change", {
-    detail: { brush: this.brush, tileType: this.tileType }
-  }));
-}
+    document.dispatchEvent(
+      new CustomEvent("app-tool-change", {
+        detail: { brush: this.brush, tileType: this.tileType },
+      }),
+    );
+  }
 
-_setTool(tool) {
-  this.tool = tool;
-  Object.keys(this._toolButtons).forEach(key => {
-    this._toolButtons[key].classList.toggle("active", key === tool);
-  });
-  document.dispatchEvent(new CustomEvent("app-tool-change", { detail: tool }));
-}
+  _setTileType(type) {
+    this.tileType = type;
+    Object.keys(this._typeButtons).forEach((key) => {
+      this._typeButtons[key].classList.toggle("active", key === type);
+    });
+    document.dispatchEvent(
+      new CustomEvent("app-tool-change", {
+        detail: { brush: this.brush, tileType: this.tileType },
+      }),
+    );
+  }
+
+  _setTool(tool) {
+    this.tool = tool;
+    Object.keys(this._toolButtons).forEach((key) => {
+      this._toolButtons[key].classList.toggle("active", key === tool);
+    });
+    document.dispatchEvent(
+      new CustomEvent("app-tool-change", { detail: tool }),
+    );
+  }
 
   _toggleSidebar(selectedTab) {
-    let anyOpen = false; 
+    let anyOpen = false;
 
     Object.keys(this._tabs).forEach((key) => {
       const { btn, panel } = this._tabs[key];
@@ -227,16 +233,15 @@ _setTool(tool) {
   }
 
   openStatsPanel() {
-  // Close all panels first, then open stats
-  Object.keys(this._tabs).forEach((key) => {
-    this._tabs[key].panel.classList.add("hidden");
-    this._tabs[key].btn.classList.remove("active");
-  });
+    Object.keys(this._tabs).forEach((key) => {
+      this._tabs[key].panel.classList.add("hidden");
+      this._tabs[key].btn.classList.remove("active");
+    });
 
-  this._tabs.stats.panel.classList.remove("hidden");
-  this._tabs.stats.btn.classList.add("active");
-  document.body.classList.add("sidebar-open");
-}
+    this._tabs.stats.panel.classList.remove("hidden");
+    this._tabs.stats.btn.classList.add("active");
+    document.body.classList.add("sidebar-open");
+  }
 
   _toggleTheme() {
     const doc = document.documentElement;
@@ -253,7 +258,6 @@ _setTool(tool) {
     this._sliderIcons.forEach((icon) => {
       icon.addEventListener("click", () => {
         const targetId = icon.getAttribute("data-target");
-        // Find matching input in our existing params object
         const input = Object.values(this._params).find(
           (el) => el.id === targetId,
         );
@@ -265,7 +269,6 @@ _setTool(tool) {
 
           let newVal = isPlus ? currentVal + step : currentVal - step;
 
-          // Clamp values to min/max defined in HTML
           const min = parseFloat(input.min);
           const max = parseFloat(input.max);
           if (!isNaN(min)) newVal = Math.max(min, newVal);
@@ -273,7 +276,6 @@ _setTool(tool) {
 
           input.value = newVal;
 
-          // Dispatch event so the simulation picks up the change
           input.dispatchEvent(new Event("input"));
         }
       });
@@ -290,7 +292,7 @@ _setTool(tool) {
       this._tabs[key].panel.classList.add("hidden");
       this._tabs[key].btn.classList.remove("active");
     });
-    // 🟢 Ensure the state is cleared
+
     document.body.classList.remove("sidebar-open");
   }
 
@@ -305,18 +307,18 @@ _setTool(tool) {
   }
 
   updateAgentCap(spawnTileCount) {
-  const input = this._params.agentCount;
-  const hardMax = 500;
-  const effectiveMax = Math.min(spawnTileCount, hardMax);
+    const input = this._params.agentCount;
+    const hardMax = 500;
+    const effectiveMax = Math.min(spawnTileCount, hardMax);
 
-  input.max = effectiveMax;
+    input.max = effectiveMax;
 
-  if (parseInt(input.value) === 0 || parseInt(input.value) > effectiveMax) {
-    input.value = effectiveMax;
+    if (parseInt(input.value) === 0 || parseInt(input.value) > effectiveMax) {
+      input.value = effectiveMax;
+    }
   }
-}
 
-get currentTool() {
-  return { brush: this.brush, tileType: this.tileType };
-}
+  get currentTool() {
+    return { brush: this.brush, tileType: this.tileType };
+  }
 }

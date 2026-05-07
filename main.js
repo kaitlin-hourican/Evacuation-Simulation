@@ -11,7 +11,7 @@ import {
   MAP_ROWS,
   TILE_SIZE,
   TILESIZE_METRES,
-  TILE_TYPES
+  TILE_TYPES,
 } from "./engine/constants.js";
 
 // canvas set up
@@ -47,7 +47,7 @@ input.init();
 
 // zoom
 const zoomSlider = document.getElementById("zoom-slider");
-zoomSlider.value = TILE_SIZE; 
+zoomSlider.value = TILE_SIZE;
 
 zoomSlider.addEventListener("input", (e) => {
   const newTileSize = parseInt(e.target.value);
@@ -77,11 +77,10 @@ document.addEventListener("app-mode-change", (e) => {
 
     simulation.spawnAgents();
 
-    // Draw grid once before starting so snapshot captures correct state
     grid.draw([], "drawTile", "obstacle");
     fireSystem.draw(ctx);
 
-    simulation.start(); // ← snapshot captured here, after grid is drawn
+    simulation.start();
   } else {
     simulation.stop();
     simulation.clear();
@@ -90,14 +89,13 @@ document.addEventListener("app-mode-change", (e) => {
   }
 });
 
-// 3. Handle Map Clearing (Optional but recommended)
 document.addEventListener("app-tool-change", (e) => {
   if (e.detail === "clear") {
     grid.clear();
     fireSystem.reset();
     ui.updateAgentCap(0);
     editRender();
-    ui._setBrush("drawTile"); // reset brush after clear
+    ui._setBrush("drawTile");
   }
 });
 
@@ -159,7 +157,6 @@ document.addEventListener("app-simulation-complete", () => {
 });
 
 function loadMap(data) {
-  // Validate
   if (!data.tilemap || !data.meta) {
     ui._showStatus("Invalid map file — missing required fields");
     return;
@@ -171,7 +168,6 @@ function loadMap(data) {
     return;
   }
 
-  // Stop simulation if running
   if (simulation.isRunning) {
     simulation.stop();
     simulation.clear();
@@ -179,13 +175,12 @@ function loadMap(data) {
     ui._updateModeUI("edit");
   }
 
-  // Load tilemap
   for (let row = 0; row < grid.rows; row++) {
     for (let col = 0; col < grid.cols; col++) {
       grid.tilemap[row][col] = data.tilemap[row][col] ?? TILE_TYPES.EMPTY;
     }
   }
-  // Load settings if present
+  
   if (data.settings) {
     if (data.settings.agentCount)
       ui._params.agentCount.value = data.settings.agentCount;
@@ -216,7 +211,7 @@ function render() {
 }
 
 function simulationRender() {
-   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (simulation.gridSnapshot) {
@@ -240,7 +235,10 @@ function editRender() {
     } else if (input.currentTool === "drawRect") {
       previews = tools.getRectTiles(input.startTile, input.currentMouseTile);
     } else if (input.currentTool === "drawRectFilled") {
-      previews = tools.getFilledRectTiles(input.startTile, input.currentMouseTile);
+      previews = tools.getFilledRectTiles(
+        input.startTile,
+        input.currentMouseTile,
+      );
     }
   }
 

@@ -1,4 +1,9 @@
-import { INJURY_SCALE, TILE_TYPES, TILE_SIZE, PHYSICS_SCALE } from "./constants.js";
+import {
+  INJURY_SCALE,
+  TILE_TYPES,
+  TILE_SIZE,
+  PHYSICS_SCALE,
+} from "./constants.js";
 
 export class Agent {
   #isFatal = false;
@@ -59,8 +64,8 @@ export class Agent {
       MAX_SPEED,
     );
 
- const col = Math.floor((this.x * PHYSICS_SCALE) / TILE_SIZE);
-const row = Math.floor((this.y * PHYSICS_SCALE) / TILE_SIZE);
+    const col = Math.floor((this.x * PHYSICS_SCALE) / TILE_SIZE);
+    const row = Math.floor((this.y * PHYSICS_SCALE) / TILE_SIZE);
 
     const tileValue = flowfield.grid.getTile(row, col);
     if (tileValue === TILE_TYPES.GOAL)
@@ -95,14 +100,16 @@ const row = Math.floor((this.y * PHYSICS_SCALE) / TILE_SIZE);
     for (let i = 0; i < substeps; i++) {
       this.x += subStep * this.heading.x;
       this.y += subStep * this.heading.y;
-      this.resolveWallCollisions(flowfield); 
+      this.resolveWallCollisions(flowfield);
     }
 
     // boundary clamping
     const minX = this.radius;
-const maxX = (flowfield.grid.cols * TILE_SIZE) / PHYSICS_SCALE - this.radius;
-const minY = this.radius;
-const maxY = (flowfield.grid.rows * TILE_SIZE) / PHYSICS_SCALE - this.radius;
+    const maxX =
+      (flowfield.grid.cols * TILE_SIZE) / PHYSICS_SCALE - this.radius;
+    const minY = this.radius;
+    const maxY =
+      (flowfield.grid.rows * TILE_SIZE) / PHYSICS_SCALE - this.radius;
 
     this.x = Math.max(minX, Math.min(maxX, this.x));
     this.y = Math.max(minY, Math.min(maxY, this.y));
@@ -156,11 +163,11 @@ const maxY = (flowfield.grid.rows * TILE_SIZE) / PHYSICS_SCALE - this.radius;
     const tileMetres = TILE_SIZE / PHYSICS_SCALE;
     if (tileMetres <= 0) return { x: 0, y: 0 };
 
-    // position in tile units (not integers - fractional position across grid)
+    // position in tile units 
     const tx = this.x / tileMetres - 0.5;
     const ty = this.y / tileMetres - 0.5;
 
-    // integer tile coords of top-left of the 4 surrounding tiles
+    // integer tile - coords of top left of 4 surrounding tiles - card
     let col0 = Math.floor(tx);
     let row0 = Math.floor(ty);
 
@@ -168,14 +175,14 @@ const maxY = (flowfield.grid.rows * TILE_SIZE) / PHYSICS_SCALE - this.radius;
     col0 = Math.max(0, Math.min(col0, flowfield.grid.cols - 2));
     row0 = Math.max(0, Math.min(row0, flowfield.grid.rows - 2));
 
-    // fractional part - how far between col0 and col0+1
-    const fx = tx - col0; 
-    const fy = ty - row0; 
+    // fractional part 
+    const fx = tx - col0;
+    const fy = ty - row0;
 
-    const wTL = (1 - fx) * (1 - fy); 
-    const wTR = fx * (1 - fy); 
-    const wBL = (1 - fx) * fy; 
-    const wBR = fx * fy; 
+    const wTL = (1 - fx) * (1 - fy);
+    const wTR = fx * (1 - fy);
+    const wBL = (1 - fx) * fy;
+    const wBR = fx * fy;
 
     const vTL = flowfield.getVector(row0, col0);
     const vTR = flowfield.getVector(row0, col0 + 1);
@@ -189,13 +196,13 @@ const maxY = (flowfield.grid.rows * TILE_SIZE) / PHYSICS_SCALE - this.radius;
   }
 
   #applyGradualTurn(desiredVector, deltaTime) {
-    // maximum radians the agent can turn per second
-    const maxTurnRate = Math.PI * 2; 
+    // maximum degree turn / sec
+    const maxTurnRate = Math.PI * 2;
 
     const currentAngle = Math.atan2(this.heading.y, this.heading.x);
     const desiredAngle = Math.atan2(desiredVector.y, desiredVector.x);
 
-    // find shortest ang difference between current and desired
+    // shortest ang difference between current and desired
     let angleDiff = desiredAngle - currentAngle;
 
     // short way trun

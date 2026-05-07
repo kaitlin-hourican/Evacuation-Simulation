@@ -2,14 +2,22 @@ import { TILE_TYPES } from "./constants.js";
 
 class MinHeap {
   #heap = [];
-  push(item, priority) { this.#heap.push({ item, priority }); this.#bubbleUp(); }
+  push(item, priority) {
+    this.#heap.push({ item, priority });
+    this.#bubbleUp();
+  }
   pop() {
     const top = this.#heap[0];
     const end = this.#heap.pop();
-    if (this.#heap.length > 0) { this.#heap[0] = end; this.#sinkDown(0); }
+    if (this.#heap.length > 0) {
+      this.#heap[0] = end;
+      this.#sinkDown(0);
+    }
     return top?.item;
   }
-  get length() { return this.#heap.length; }
+  get length() {
+    return this.#heap.length;
+  }
   #bubbleUp() {
     let i = this.#heap.length - 1;
     while (i > 0) {
@@ -23,11 +31,17 @@ class MinHeap {
     const n = this.#heap.length;
     while (true) {
       let smallest = i;
-      const l = 2*i+1, r = 2*i+2;
-      if (l < n && this.#heap[l].priority < this.#heap[smallest].priority) smallest = l;
-      if (r < n && this.#heap[r].priority < this.#heap[smallest].priority) smallest = r;
+      const l = 2 * i + 1,
+        r = 2 * i + 2;
+      if (l < n && this.#heap[l].priority < this.#heap[smallest].priority)
+        smallest = l;
+      if (r < n && this.#heap[r].priority < this.#heap[smallest].priority)
+        smallest = r;
       if (smallest === i) break;
-      [this.#heap[smallest], this.#heap[i]] = [this.#heap[i], this.#heap[smallest]];
+      [this.#heap[smallest], this.#heap[i]] = [
+        this.#heap[i],
+        this.#heap[smallest],
+      ];
       i = smallest;
     }
   }
@@ -56,16 +70,16 @@ export class Flowfield {
 
   #dijkstra() {
     const heap = new MinHeap();
-  for (const { row, col } of this.grid.getGoalCells()) {
-    this.costField[row][col] = 0;
-    heap.push({ row, col }, 0);
-  }
+    for (const { row, col } of this.grid.getGoalCells()) {
+      this.costField[row][col] = 0;
+      heap.push({ row, col }, 0);
+    }
 
-  while (heap.length > 0) {
-    const current = heap.pop();
-    const currentCost = this.costField[current.row][current.col];
+    while (heap.length > 0) {
+      const current = heap.pop();
+      const currentCost = this.costField[current.row][current.col];
 
-    for (const [dr, dc] of this.neighbours) {
+      for (const [dr, dc] of this.neighbours) {
         const row = current.row + dr;
         const col = current.col + dc;
 
@@ -86,22 +100,20 @@ export class Flowfield {
         const bodyPenalty =
           this.grid.getTile(row, col) === TILE_TYPES.BODY ? 5 : 0;
 
-        const moveCost = dr !== 0 && dc !== 0 ? 1.41 : 1.0; // Diagonal math
+        const moveCost = dr !== 0 && dc !== 0 ? 1.41 : 1.0;
         const newCost = currentCost + moveCost + firePenalty + bodyPenalty;
 
         if (newCost < this.costField[row][col]) {
-        this.costField[row][col] = newCost;
-        heap.push({ row, col }, newCost); // stale entries naturally lose out
-      }
+          this.costField[row][col] = newCost;
+          heap.push({ row, col }, newCost);
+        }
       }
     }
   }
 
   #isDiagonalBlocked(currentRow, currentCol, dr, dc) {
-    // only applies to diagonal moves
     if (dr === 0 || dc === 0) return false;
 
-    // if either adjacent cardinal tile is blocked → diagonal is invalid
     const blockedA = !this.grid.isWalkable(currentRow + dr, currentCol);
     const blockedB = !this.grid.isWalkable(currentRow, currentCol + dc);
 
@@ -118,8 +130,8 @@ export class Flowfield {
   #computeVectorField() {
     // initialise vector field
     this.vectorField = Array.from({ length: this.grid.rows }, () =>
-  Array.from({ length: this.grid.cols }, () => ({ x: 0, y: 0 }))
-);
+      Array.from({ length: this.grid.cols }, () => ({ x: 0, y: 0 })),
+    );
 
     // loop cells
     for (let row = 0; row < this.grid.rows; row++) {
@@ -129,7 +141,7 @@ export class Flowfield {
         let bestCol = -1;
         let bestCost = Infinity;
 
-        // skip obstacle cells - ie !isWalkable
+        // skip obstacle cells
         if (!this.grid.isWalkable(row, col)) continue;
         // skip if cost is Infinity - out of bounds
         if (current === Infinity) continue;
@@ -170,25 +182,23 @@ export class Flowfield {
   }
 
   isReachable() {
-  for (let row = 0; row < this.grid.rows; row++) {
-    for (let col = 0; col < this.grid.cols; col++) {
-      if (this.grid.getTile(row, col) === TILE_TYPES.SPAWN) {
-        if (this.costField[row]?.[col] !== Infinity) return true;
+    for (let row = 0; row < this.grid.rows; row++) {
+      for (let col = 0; col < this.grid.cols; col++) {
+        if (this.grid.getTile(row, col) === TILE_TYPES.SPAWN) {
+          if (this.costField[row]?.[col] !== Infinity) return true;
+        }
       }
     }
+    return false;
   }
-  return false;
-}
 
   getVector(row, col) {
     if (isNaN(row) || isNaN(col)) return { x: 0, y: 0 };
 
-    // 2. Check bounds
     if (row < 0 || row >= this.grid.rows || col < 0 || col >= this.grid.cols) {
       return { x: 0, y: 0 };
     }
 
-    // 3. Final safety: check if the row exists in vectorField
     const vectorRow = this.vectorField[row];
     if (!vectorRow) return { x: 0, y: 0 };
 

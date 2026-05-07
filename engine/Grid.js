@@ -1,6 +1,5 @@
 // handles the grid structure for the simulation
 // stores the tilemap, manages tile access, and handles rendering to the canvas
-
 import { TILE_COLOURS, DEFAULT_COLOURS, TILE_TYPES } from "./constants.js";
 
 export class Grid {
@@ -50,23 +49,27 @@ export class Grid {
   }
 
   drawPreviewTiles(row, col) {
-    this.previewTiles.push({row, col});
+    this.previewTiles.push({ row, col });
   }
 
   // draws the entire grid to the canvas
   draw(previewTiles = [], currentTool = "drawTile", tileType = "obstacle") {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-  this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
- 
-    const worldScale = this.tileSize / 0.5; 
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    const worldScale = this.tileSize / 0.5;
 
     // frustum culling - means you figure out how much is actually visible
     const startCol = Math.floor(this.wrapper.scrollLeft / this.tileSize);
-    const endCol   = Math.ceil((this.wrapper.scrollLeft + this.wrapper.clientWidth) / this.tileSize);
+    const endCol = Math.ceil(
+      (this.wrapper.scrollLeft + this.wrapper.clientWidth) / this.tileSize,
+    );
     const startRow = Math.floor(this.wrapper.scrollTop / this.tileSize);
-    const endRow   = Math.ceil((this.wrapper.scrollTop + this.wrapper.clientHeight) / this.tileSize);
+    const endRow = Math.ceil(
+      (this.wrapper.scrollTop + this.wrapper.clientHeight) / this.tileSize,
+    );
 
-    // grid boundaries
+    // grid bounds
     const i0 = Math.max(0, startRow);
     const i1 = Math.min(this.rows, endRow);
     const j0 = Math.max(0, startCol);
@@ -74,68 +77,68 @@ export class Grid {
 
     // only draw on-screen tiles
     for (let row = i0; row < i1; row++) {
-        for (let col = j0; col < j1; col++) {
-            const tileValue = this.tilemap[row][col];
-            
-            if (tileValue === TILE_TYPES.EMPTY) continue;
+      for (let col = j0; col < j1; col++) {
+        const tileValue = this.tilemap[row][col];
 
-            const x = col * this.tileSize;
-            const y = row * this.tileSize;
-            const colours = TILE_COLOURS[tileValue] ?? DEFAULT_COLOURS;
+        if (tileValue === TILE_TYPES.EMPTY) continue;
 
-            this.ctx.fillStyle = colours.fill;
-            this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
-            
-            this.ctx.strokeStyle = colours.stroke;
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeRect(x + 0.5, y + 0.5, this.tileSize - 1, this.tileSize - 1);
-        }
+        const x = col * this.tileSize;
+        const y = row * this.tileSize;
+        const colours = TILE_COLOURS[tileValue] ?? DEFAULT_COLOURS;
+
+        this.ctx.fillStyle = colours.fill;
+        this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
+
+        this.ctx.strokeStyle = colours.stroke;
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(
+          x + 0.5,
+          y + 0.5,
+          this.tileSize - 1,
+          this.tileSize - 1,
+        );
+      }
     }
 
-    previewTiles.forEach(tile => {
-    // Map tileType string to TILE_TYPES constant
-    const typeMap = {
-      obstacle: TILE_TYPES.OBSTACLE,
-      spawn:    TILE_TYPES.SPAWN,
-      goal:     TILE_TYPES.GOAL,
-      fire:     TILE_TYPES.FIRE,
-      erase:    TILE_TYPES.EMPTY,
-    };
+    // dont like this
+    previewTiles.forEach((tile) => {
+      const typeMap = {
+        obstacle: TILE_TYPES.OBSTACLE,
+        spawn: TILE_TYPES.SPAWN,
+        goal: TILE_TYPES.GOAL,
+        fire: TILE_TYPES.FIRE,
+        erase: TILE_TYPES.EMPTY,
+      };
 
-    const type = typeMap[tileType] ?? TILE_TYPES.OBSTACLE;
-    
-    // For erase, show a faded red to indicate deletion
-    const baseColor = type === TILE_TYPES.EMPTY
-      ? "#ff4444"
-      : TILE_COLOURS[type].fill;
+      const type = typeMap[tileType] ?? TILE_TYPES.OBSTACLE;
 
-    this.ctx.fillStyle = baseColor + "55";
-    this.ctx.fillRect(
-      tile.col * this.tileSize,
-      tile.row * this.tileSize,
-      this.tileSize,
-      this.tileSize
-    );
-  });
+      const baseColor =
+        type === TILE_TYPES.EMPTY ? "#ff4444" : TILE_COLOURS[type].fill;
+
+      this.ctx.fillStyle = baseColor + "55";
+      this.ctx.fillRect(
+        tile.col * this.tileSize,
+        tile.row * this.tileSize,
+        this.tileSize,
+        this.tileSize,
+      );
+    });
   }
 
-   updateResolution(newSize) {
-  this.tileSize = newSize;
+  updateResolution(newSize) {
+    this.tileSize = newSize;
 
-  // CSS size and canvas size are the same — no dpr scaling
-  this.canvas.width  = this.cols * this.tileSize;
-  this.canvas.height = this.rows * this.tileSize;
-  this.canvas.style.width  = `${this.cols * this.tileSize}px`;
-  this.canvas.style.height = `${this.rows * this.tileSize}px`;
-  this.canvas.style.backgroundSize = `${this.tileSize}px ${this.tileSize}px`;
-}
+    this.canvas.width = this.cols * this.tileSize;
+    this.canvas.height = this.rows * this.tileSize;
+    this.canvas.style.width = `${this.cols * this.tileSize}px`;
+    this.canvas.style.height = `${this.rows * this.tileSize}px`;
+    this.canvas.style.backgroundSize = `${this.tileSize}px ${this.tileSize}px`;
+  }
 
   setZoom(value) {
     this.updateResolution(value);
-    this.draw(); 
+    this.draw();
   }
-
-
 
   // sets the tile at a given row and column to a new type
   // ignores the request if the tile is outside the grid
@@ -167,7 +170,6 @@ export class Grid {
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-
         if (this.getTile(row, col) === TILE_TYPES.GOAL) {
           goals.push({ row, col });
         }
@@ -186,7 +188,6 @@ export class Grid {
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-
         if (this.getTile(row, col) === TILE_TYPES.SPAWN) {
           spawn.push({ row, col });
         }
@@ -201,7 +202,6 @@ export class Grid {
 
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-
         if (this.getTile(row, col) === TILE_TYPES.FIRE) {
           fire.push({ row, col });
         }
@@ -210,7 +210,6 @@ export class Grid {
 
     return fire;
   }
-
 
   // converts canvas pixel coordinates to a grid tile position
   // useful for mapping mouse clicks to tiles

@@ -10,7 +10,16 @@ export class Simulation {
   gridSnapshot = null;
   #onRender;
 
-  constructor(grid, flowfield, fireSystem, uiParams, statsController, ctx, scale, onRender) {
+  constructor(
+    grid,
+    flowfield,
+    fireSystem,
+    uiParams,
+    statsController,
+    ctx,
+    scale,
+    onRender,
+  ) {
     this.grid = grid;
     this.flowfield = flowfield;
     this.fireSystem = fireSystem;
@@ -30,11 +39,11 @@ export class Simulation {
   }
 
   updateScale(newScale) {
-  this.scale = newScale;
-  this.agents.forEach((agent) => {
-    agent.scale = newScale;
-  });
-}
+    this.scale = newScale;
+    this.agents.forEach((agent) => {
+      agent.scale = newScale;
+    });
+  }
 
   spawnAgents() {
     this.clear();
@@ -43,7 +52,7 @@ export class Simulation {
     const cells = this.grid.getSpawnCells();
     if (cells.length === 0) return;
 
-    // Fisher-yates shuffle
+    // fisher-yates shuffle
     let currentIndex = cells.length;
     while (currentIndex !== 0) {
       let randomIndex = Math.floor(Math.random() * currentIndex);
@@ -57,34 +66,34 @@ export class Simulation {
     const selected = cells.slice(0, agentCount);
 
     selected.forEach((cell) => {
-  const pixelX = cell.col * TILE_SIZE + TILE_SIZE / 2;
-  const pixelY = cell.row * TILE_SIZE + TILE_SIZE / 2;
-  const x = pixelX / PHYSICS_SCALE;
-  const y = pixelY / PHYSICS_SCALE;
+      const pixelX = cell.col * TILE_SIZE + TILE_SIZE / 2;
+      const pixelY = cell.row * TILE_SIZE + TILE_SIZE / 2;
+      const x = pixelX / PHYSICS_SCALE;
+      const y = pixelY / PHYSICS_SCALE;
 
-  this.agents.push(new Agent(x, y, this.scale));
-});
+      this.agents.push(new Agent(x, y, this.scale));
+    });
 
     this.stats.spawned = this.agents.length;
   }
 
   draw() {
-  for (const agent of this.agents) {
-    if (agent._loggedDead) agent.draw(this.ctx);
-  }
-  for (const agent of this.agents) {
-    if (!agent._loggedDead) agent.draw(this.ctx);
-  }
-}
-
-  clear() {
-     for (let row = 0; row < this.grid.rows; row++) {
-    for (let col = 0; col < this.grid.cols; col++) {
-      if (this.grid.getTile(row, col) === TILE_TYPES.BODY) {
-        this.grid.setTile(row, col, TILE_TYPES.EMPTY);
-      }
+    for (const agent of this.agents) {
+      if (agent._loggedDead) agent.draw(this.ctx);
+    }
+    for (const agent of this.agents) {
+      if (!agent._loggedDead) agent.draw(this.ctx);
     }
   }
+
+  clear() {
+    for (let row = 0; row < this.grid.rows; row++) {
+      for (let col = 0; col < this.grid.cols; col++) {
+        if (this.grid.getTile(row, col) === TILE_TYPES.BODY) {
+          this.grid.setTile(row, col, TILE_TYPES.EMPTY);
+        }
+      }
+    }
     this.agents = [];
     this.stats = {
       spawned: 0,
@@ -96,194 +105,190 @@ export class Simulation {
   }
 
   start() {
-  if (this.#running) return;
-  this.#running = true;
-  this.#lastTime = null;
-  this.#accumulator = 0; // ← reset
-  this.fireSystem.start();
+    if (this.#running) return;
+    this.#running = true;
+    this.#lastTime = null;
+    this.#accumulator = 0; // ← reset
+    this.fireSystem.start();
 
-  const offscreen = document.createElement("canvas");
-  offscreen.width = this.ctx.canvas.width;
-  offscreen.height = this.ctx.canvas.height;
-  const offCtx = offscreen.getContext("2d");
-  offCtx.drawImage(this.ctx.canvas, 0, 0);
-  this.gridSnapshot = offscreen;
+    const offscreen = document.createElement("canvas");
+    offscreen.width = this.ctx.canvas.width;
+    offscreen.height = this.ctx.canvas.height;
+    const offCtx = offscreen.getContext("2d");
+    offCtx.drawImage(this.ctx.canvas, 0, 0);
+    this.gridSnapshot = offscreen;
 
-  this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
-}
-
-stop() {
-  this.#running = false;
-  this.#accumulator = 0; // ← reset
-  this.gridSnapshot = null;
-  if (this.#animFrameId) {
-    cancelAnimationFrame(this.#animFrameId);
-    this.#animFrameId = null;
+    this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
   }
-}
 
-#update(timestamp) {
-  if (!this.#running) return;
+  stop() {
+    this.#running = false;
+    this.#accumulator = 0;
+    this.gridSnapshot = null;
+    if (this.#animFrameId) {
+      cancelAnimationFrame(this.#animFrameId);
+      this.#animFrameId = null;
+    }
+  }
 
-  const speedMult = parseFloat(this.uiParams.agentSpeed.value) || 1;
-  const fireMult  = parseFloat(this.uiParams.fireSpread.value) || 1;
+  #update(timestamp) {
+    if (!this.#running) return;
 
-  const rawDelta = this.#lastTime ? (timestamp - this.#lastTime) / 1000 : 0;
-  this.#lastTime = timestamp;
+    const speedMult = parseFloat(this.uiParams.agentSpeed.value) || 1;
+    const fireMult = parseFloat(this.uiParams.fireSpread.value) || 1;
 
-  // Cap delta to prevent spiral of death if tab was backgrounded
-  const cappedDelta = Math.min(rawDelta, 0.1);
-  this.#accumulator += cappedDelta;
+    const rawDelta = this.#lastTime ? (timestamp - this.#lastTime) / 1000 : 0;
+    this.#lastTime = timestamp;
 
-  let stillActive = 0;
-  let didStep = false;
+    const cappedDelta = Math.min(rawDelta, 0.1);
+    this.#accumulator += cappedDelta;
 
-  // Run as many fixed physics steps as accumulated time allows
-  while (this.#accumulator >= this.#fixedStep) {
-    this.#accumulator -= this.#fixedStep;
-    didStep = true;
-    stillActive = 0;
+    let stillActive = 0;
+    let didStep = false;
 
-    for (let i = this.agents.length - 1; i >= 0; i--) {
-      const agent = this.agents[i];
-      const result = agent.update(
-        this.flowfield,
-        this.#fixedStep * speedMult, 
-        this.agents,
-        this.fireSystem,
-      );
+    while (this.#accumulator >= this.#fixedStep) {
+      this.#accumulator -= this.#fixedStep;
+      didStep = true;
+      stillActive = 0;
 
-      if (result?.evacuated) {
-        this.stats.evacuated++;
-        this.stats.injuryLevels[result.ais.level]++;
-        this.agents.splice(i, 1);
-        continue;
-      }
+      for (let i = this.agents.length - 1; i >= 0; i--) {
+        const agent = this.agents[i];
+        const result = agent.update(
+          this.flowfield,
+          this.#fixedStep * speedMult,
+          this.agents,
+          this.fireSystem,
+        );
 
-      if (result?.dead) {
-        if (!agent._loggedDead) {
-          this.stats.killed++;
-          this.stats.injuryLevels[6]++;
-          this.grid.setTile(result.row, result.col, TILE_TYPES.BODY);
-          agent._loggedDead = true;
+        if (result?.evacuated) {
+          this.stats.evacuated++;
+          this.stats.injuryLevels[result.ais.level]++;
+          this.agents.splice(i, 1);
+          continue;
         }
-        continue;
+
+        if (result?.dead) {
+          if (!agent._loggedDead) {
+            this.stats.killed++;
+            this.stats.injuryLevels[6]++;
+            this.grid.setTile(result.row, result.col, TILE_TYPES.BODY);
+            agent._loggedDead = true;
+          }
+          continue;
+        }
+
+        stillActive++;
       }
 
-      stillActive++;
+      this.#resolveAllCollisions();
+
+      if (stillActive === 0 && this.stats.spawned > 0) {
+        this.stop();
+        document.dispatchEvent(new CustomEvent("app-simulation-complete"));
+        break;
+      }
+
+      this.fireSystem.update(this.#fixedStep * fireMult);
+      this.stats.elapsed += this.#fixedStep;
     }
 
-    this.#resolveAllCollisions();
+    if (didStep) {
+      const livingAgents = this.agents.filter((a) => !a._loggedDead).length;
+      this.statsController.update(this.stats, livingAgents);
+    }
 
-    if (stillActive === 0 && this.stats.spawned > 0) {
-  this.stop();
-  document.dispatchEvent(new CustomEvent("app-simulation-complete"));
-  break;
-}
-
-    this.fireSystem.update(this.#fixedStep * fireMult);
-    this.stats.elapsed += this.#fixedStep;
+    this.#onRender();
+    this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
   }
-
-  if (didStep) {
-    const livingAgents = this.agents.filter(a => !a._loggedDead).length;
-    this.statsController.update(this.stats, livingAgents);
-  }
-
-  this.#onRender();
-  this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
-}
 
   get isRunning() {
     return this.#running;
   }
 
   #buildSpatialGrid() {
-  this.spatialGrid = {};
-  for (const agent of this.agents) {
-    const cellX = Math.floor(agent.x * PHYSICS_SCALE / TILE_SIZE);
-    const cellY = Math.floor(agent.y * PHYSICS_SCALE / TILE_SIZE);
-    const key = `${cellX},${cellY}`;
-    if (!this.spatialGrid[key]) this.spatialGrid[key] = [];
-    this.spatialGrid[key].push(agent);
-  }
-}
-
-#getNearbyAgents(agent) {
-  const cellX = Math.floor(agent.x * PHYSICS_SCALE / TILE_SIZE);
-  const cellY = Math.floor(agent.y * PHYSICS_SCALE / TILE_SIZE);
-  const nearby = [];
-
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      const key = `${cellX + dx},${cellY + dy}`;
-      if (this.spatialGrid[key]) nearby.push(...this.spatialGrid[key]);
+    this.spatialGrid = {};
+    for (const agent of this.agents) {
+      const cellX = Math.floor((agent.x * PHYSICS_SCALE) / TILE_SIZE);
+      const cellY = Math.floor((agent.y * PHYSICS_SCALE) / TILE_SIZE);
+      const key = `${cellX},${cellY}`;
+      if (!this.spatialGrid[key]) this.spatialGrid[key] = [];
+      this.spatialGrid[key].push(agent);
     }
   }
-  return nearby;
-}
 
- #resolveAllCollisions() {
-  // Reset pressure accumulators
-  for (const agent of this.agents) {
-    agent.pressureThisFrame = 0;
+  #getNearbyAgents(agent) {
+    const cellX = Math.floor((agent.x * PHYSICS_SCALE) / TILE_SIZE);
+    const cellY = Math.floor((agent.y * PHYSICS_SCALE) / TILE_SIZE);
+    const nearby = [];
+
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const key = `${cellX + dx},${cellY + dy}`;
+        if (this.spatialGrid[key]) nearby.push(...this.spatialGrid[key]);
+      }
+    }
+    return nearby;
   }
 
-  const iterations = 5;
+  #resolveAllCollisions() {
+    for (const agent of this.agents) {
+      agent.pressureThisFrame = 0;
+    }
 
-  for (let iter = 0; iter < iterations; iter++) {
-    this.#buildSpatialGrid();
+    const iterations = 5;
 
-    for (let i = 0; i < this.agents.length; i++) {
-      const a = this.agents[i];
-      if (a._loggedDead) continue;
+    for (let iter = 0; iter < iterations; iter++) {
+      this.#buildSpatialGrid();
 
-      const nearby = this.#getNearbyAgents(a);
+      for (let i = 0; i < this.agents.length; i++) {
+        const a = this.agents[i];
+        if (a._loggedDead) continue;
 
-      for (const b of nearby) {
-        if (b === a || b._loggedDead) continue;
+        const nearby = this.#getNearbyAgents(a);
 
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance === 0) continue;
+        for (const b of nearby) {
+          if (b === a || b._loggedDead) continue;
 
-        const overlap = a.radius + b.radius - distance;
-        if (overlap > 0) {
-          // Accumulate pressure — more overlap = more crushing force
-          a.pressureThisFrame += overlap;
-          b.pressureThisFrame += overlap;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance === 0) continue;
 
-          const maxPush = a.radius * 0.25;
-          const pushAmount = Math.min(overlap / 2, maxPush);
-          const nx = (dx / distance) * pushAmount;
-          const ny = (dy / distance) * pushAmount;
+          const overlap = a.radius + b.radius - distance;
+          if (overlap > 0) {
+            a.pressureThisFrame += overlap;
+            b.pressureThisFrame += overlap;
 
-          a.x += nx; a.y += ny;
-          b.x -= nx; b.y -= ny;
+            const maxPush = a.radius * 0.25;
+            const pushAmount = Math.min(overlap / 2, maxPush);
+            const nx = (dx / distance) * pushAmount;
+            const ny = (dy / distance) * pushAmount;
 
-          a.resolveWallCollisions(this.flowfield);
-          b.resolveWallCollisions(this.flowfield);
+            a.x += nx;
+            a.y += ny;
+            b.x -= nx;
+            b.y -= ny;
+
+            a.resolveWallCollisions(this.flowfield);
+            b.resolveWallCollisions(this.flowfield);
+          }
         }
       }
     }
+
+    this.#applyPressureDamage();
   }
 
-  // Apply pressure damage after all iterations
-  this.#applyPressureDamage();
-}
+  #applyPressureDamage() {
+    const PRESSURE_THRESHOLD = 0.3;
+    const PRESSURE_DAMAGE_SCALE = 0.5;
 
-#applyPressureDamage() {
-  const PRESSURE_THRESHOLD = 0.3; // overlap units before damage starts
-  const PRESSURE_DAMAGE_SCALE = 0.5; // tune this to taste
-
-  for (const agent of this.agents) {
-    if (agent._loggedDead) continue;
-    if (agent.pressureThisFrame > PRESSURE_THRESHOLD) {
-      // Damage scales with excess pressure, applied per frame
-      const excessPressure = agent.pressureThisFrame - PRESSURE_THRESHOLD;
-      agent.health -= excessPressure * PRESSURE_DAMAGE_SCALE;
+    for (const agent of this.agents) {
+      if (agent._loggedDead) continue;
+      if (agent.pressureThisFrame > PRESSURE_THRESHOLD) {
+        const excessPressure = agent.pressureThisFrame - PRESSURE_THRESHOLD;
+        agent.health -= excessPressure * PRESSURE_DAMAGE_SCALE;
+      }
     }
   }
-}
 }

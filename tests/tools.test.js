@@ -27,13 +27,11 @@ describe("tools.getLineTiles", () => {
   });
 
   test("snaps diagonal to horizontal when dCol > dRow", () => {
-    // dCol=3, dRow=1 → snaps to horizontal
     const result = tools.getLineTiles({ row: 0, col: 0 }, { row: 1, col: 3 });
     result.forEach(tile => expect(tile.row).toBe(0));
   });
 
   test("snaps diagonal to vertical when dRow > dCol", () => {
-    // dRow=3, dCol=1 → snaps to vertical
     const result = tools.getLineTiles({ row: 0, col: 0 }, { row: 3, col: 1 });
     result.forEach(tile => expect(tile.col).toBe(0));
   });
@@ -42,7 +40,6 @@ describe("tools.getLineTiles", () => {
 describe("tools.getRectTiles", () => {
   test("returns only border tiles for a 3x3 rect", () => {
     const result = tools.getRectTiles({ row: 0, col: 0 }, { row: 2, col: 2 });
-    // Centre tile (1,1) should NOT be included
     const hasCenter = result.some(t => t.row === 1 && t.col === 1);
     expect(hasCenter).toBe(false);
   });
@@ -58,7 +55,6 @@ describe("tools.getRectTiles", () => {
   });
 
   test("works when end is top-left of start", () => {
-    // Should handle reversed coordinates
     const forward = tools.getRectTiles({ row: 0, col: 0 }, { row: 2, col: 2 });
     const reversed = tools.getRectTiles({ row: 2, col: 2 }, { row: 0, col: 0 });
     expect(reversed.length).toBe(forward.length);

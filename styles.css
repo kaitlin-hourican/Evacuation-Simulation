@@ -183,6 +183,7 @@ html, body {
     align-items: center;
 }
 
+/* == activity bar buttons == */
 .btn-activity {
     width: 100%;
     height: 64px;
@@ -309,6 +310,7 @@ html, body {
     border-radius: 4px; 
 }
 
+ /* === edit panel parametrs === */
 .param-row {
     display: flex;
     flex-direction: column;
@@ -320,6 +322,11 @@ html, body {
     font-size: 10px;
     color: var(--text-muted);
     text-transform: uppercase;
+}
+
+#input-agent-count {
+    text-align: center;
+    width: 100%;
 }
 
 .param-row input[type="range"] {
@@ -353,7 +360,6 @@ html, body {
 }
 
 /* === tool butons === */
-
 .tool-btn:hover {
     background-color: var(--bg-hover);
     border-color: var(--border-lit);
@@ -395,6 +401,7 @@ html, body {
     color: var(--danger);
 }
 
+/* === sliders === */
 .slider-wrapper {
     display: flex;
     align-items: center;
@@ -424,11 +431,6 @@ html, body {
 
 .slider-icon:hover {
     color: var(--accent);
-}
-
-#input-agent-count {
-    text-align: center;
-    width: 100%;
 }
 
 
@@ -763,7 +765,7 @@ body {
     width: 100px;
 }
 
-/* == alert messages === */
+/* == toast status messages === */
 #status-message {
   position: absolute;
   top: calc(100% + 8px); 

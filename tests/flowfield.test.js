@@ -1,7 +1,7 @@
 import { Flowfield } from "../engine/Flowfield.js"
 import { TILE_TYPES } from "../engine/constants.js";
 
-// Minimal grid mock
+// mocks
 function makeGrid(rows, cols, tiles = {}) {
   const tilemap = Array.from({ length: rows }, (_, r) =>
     Array.from({ length: cols }, (_, c) => tiles[`${r},${c}`] ?? TILE_TYPES.EMPTY)
@@ -45,7 +45,6 @@ describe("Flowfield.isReachable", () => {
     const grid = makeGrid(5, 5, {
       "0,0": TILE_TYPES.GOAL,
       "4,4": TILE_TYPES.SPAWN,
-      // Wall off the spawn tile completely
       "3,4": TILE_TYPES.OBSTACLE,
       "4,3": TILE_TYPES.OBSTACLE,
       "3,3": TILE_TYPES.OBSTACLE,
@@ -75,7 +74,6 @@ describe("Flowfield cost field", () => {
     const grid = makeGrid(1, 5, { "0,0": TILE_TYPES.GOAL });
     const ff = new Flowfield(grid);
     ff.compute();
-    // In a straight line, each step should cost more than the last
     expect(ff.costField[0][1]).toBeGreaterThan(ff.costField[0][0]);
     expect(ff.costField[0][2]).toBeGreaterThan(ff.costField[0][1]);
     expect(ff.costField[0][3]).toBeGreaterThan(ff.costField[0][2]);

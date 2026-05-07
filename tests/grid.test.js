@@ -1,7 +1,7 @@
 import { Grid } from "../engine/Grid.js";
 import { TILE_TYPES } from "../engine/constants.js";
 
-// Grid requires a canvas — mock it for Node
+// mocks
 const mockCanvas = {
   getContext: () => ({
     clearRect: () => {},
@@ -15,7 +15,6 @@ const mockCanvas = {
   height: 0,
 };
 
-// Mock document.getElementById for the wrapper
 global.document = {
   getElementById: () => ({
     scrollLeft: 0,
@@ -93,7 +92,7 @@ describe("Grid.isWalkable", () => {
 describe("Grid.pixelToTile", () => {
   let grid;
   beforeEach(() => {
-    grid = new Grid(mockCanvas, 10, 10, 20); // tileSize = 20
+    grid = new Grid(mockCanvas, 10, 10, 20); 
   });
 
   test("converts pixel to correct tile", () => {

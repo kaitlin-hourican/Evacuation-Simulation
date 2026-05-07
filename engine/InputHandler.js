@@ -8,8 +8,8 @@ export class InputHandler {
     this.onRender = onRender;
     this.onGridChange = onGridChange;
 
-    this.brush = "drawTile";      // drawTile | drawLine | drawRect
-    this.tileType = "obstacle";   // obstacle | spawn | goal | fire
+    this.brush = "drawTile";
+    this.tileType = "obstacle";
     this.isPainting = false;
     this.startTile = null;
     this.currentMouseTile = null;
@@ -24,20 +24,19 @@ export class InputHandler {
     window.addEventListener("mouseup", (e) => this.#onMouseUp(e));
 
     document.addEventListener("app-tool-change", (e) => {
-      // Erase/clear still dispatch plain strings
       if (typeof e.detail === "string") {
         this.brush = e.detail;
         this.tileType = "obstacle";
       } else {
-        this.brush    = e.detail.brush    ?? this.brush;
+        this.brush = e.detail.brush ?? this.brush;
         this.tileType = e.detail.tileType ?? this.tileType;
       }
-      // Keep currentTool in sync for main.js preview logic
+
       this.currentTool = this.brush;
     });
 
     document.addEventListener("app-mode-change", (e) => {
-      this.isPaused = (e.detail === "run");
+      this.isPaused = e.detail === "run";
       this.canvas.style.cursor = this.isPaused ? "default" : "crosshair";
     });
   }
@@ -47,7 +46,6 @@ export class InputHandler {
     this.isPainting = true;
     this.startTile = this.grid.pixelToTile(e.offsetX, e.offsetY);
 
-    // Immediate paint for tile brush and erase only
     if (this.brush === "drawTile" || e.button === 2) {
       this.#paint(e);
     }
@@ -57,7 +55,6 @@ export class InputHandler {
     this.currentMouseTile = this.grid.pixelToTile(e.offsetX, e.offsetY);
 
     if (this.isPainting && !this.isPaused) {
-      // Only tile brush paints continuously while dragging
       if (this.brush === "drawTile" || this.brush === "erase") {
         this.#paint(e);
       }
@@ -78,32 +75,31 @@ export class InputHandler {
         tilesToPlace = tools.getLineTiles(this.startTile, endTile);
       } else if (this.brush === "drawRect") {
         tilesToPlace = tools.getRectTiles(this.startTile, endTile);
-      } else if (this.brush === "drawRectFilled") {      
+      } else if (this.brush === "drawRectFilled") {
         tilesToPlace = tools.getFilledRectTiles(this.startTile, endTile);
       }
 
-      // TILE TYPE
-      tilesToPlace.forEach(t => {
+      tilesToPlace.forEach((t) => {
         tools.paintTile(this.grid, t, this.tileType);
       });
 
       if (tilesToPlace.length > 0) {
         this.onRender();
         this.onGridChange();
+      }
+
+      this.isPainting = false;
+      this.startTile = null;
     }
-
-    this.isPainting = false;
-    this.startTile = null;
   }
-}
 
-#paint(e) {
-  const tile = this.grid.pixelToTile(e.offsetX, e.offsetY);
-  if (!tile || this.isPaused) return;
+  #paint(e) {
+    const tile = this.grid.pixelToTile(e.offsetX, e.offsetY);
+    if (!tile || this.isPaused) return;
 
     tools.paintTile(this.grid, tile, this.tileType);
-  
-  this.onRender();
-  this.onGridChange();
-};
+
+    this.onRender();
+    this.onGridChange();
+  }
 }

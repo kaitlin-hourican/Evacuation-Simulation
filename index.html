@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evacuation Simulation</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- modebar -->
+  <div id="help-modal">
+    <div class="modal-content">
+        <span id="btn-close-modal">&times;</span>
+        
+        <header class="modal-header">
+            <h2 class="modal-heading">Help Guide</h2>
+            <p class="modal-heading-desc">Design, simulate, and analyse emergency evacuation scenarios.</p>
+        </header>
+
+        <article class="modal-section">
+            <h3>Design Your Map</h3>
+            <p>Use the <strong>Edit Panel</strong> to shape your environment. Select a brush and tile type to paint the grid.</p>
+            <ul class="tile-list">
+                <li><strong>⚑ Goal:</strong> The safe zone agents must reach.</li>
+                <li><strong>⬤ Spawn:</strong> Where agents appear in the simulation.</li>
+                <li><strong>◼ Wall:</strong> Permanent walls that block movement.</li>
+                <li><strong>✷ Fire:</strong> The origin point where fire begins to spread.</li>
+            </ul>
+            <p class="modal-note">
+                Use <strong>Clear</strong> to reset or <strong>Upload/Download</strong> to save JSON files.
+            </p>
+        </article>
+
+        <article class="modal-section">
+            <h3>Run Simulations</h3>
+            <p>Toggle the <strong>Mode Button</strong> in the top-right corner to switch modes.</p>
+            <ul class="feature-list">
+                <li><strong>Validation:</strong> Requires at least one Goal and one Spawn zone.</li>
+                <li><strong>Parameters:</strong> Adjust Speed, Fire Spread, and Agent Count.</li>
+                <li><strong>Live Data:</strong> View stats in the Statistics Panel during a run.</li>
+            </ul>
+        </article>
+
+        <footer class="modal-tips">
+            <h3>Pro Tips</h3>
+            <ul>
+                <li>Place fire near doorways to test choke points.</li>
+                <li>Agents dynamically reroute as fire blocks paths.</li>
+                <li>Save complex layouts using the JSON feature.</li>
+            </ul>
+        </footer>
+    </div>
+</div>
+
+
+  <header id="abms-modebar">
+    <span class="app-title"><span>//</span> Agent Evacuation Simulator</span>
+
+    <span class="mode-indicator" id="mode-indicator">
+      <span class="dot"></span>
+      <span id="mode-label">edit</span>
+    </span>
+    <button id="btn-mode-toggle">Run Simulation</button>
+
+    <div id="status-message" class="hidden">
+      <span id="status-text"></span>
+    </div>
+  </header>
+
+  <!-- sidebar  -->
+  <div class="sidebar-container">
+    <!-- activity bar -->
+    <div class="activity-bar" id="activity-bar">
+      <div class="activity-top">
+        <button class="btn-activity" id="btn-edit-tab">
+          <span class="btn-icon">✎</span>
+          <span class="btn-label">EDIT</span>
+        </button>
+        <button class="btn-activity" id="btn-stats-tab">
+          <span class="btn-icon">〣</span>
+          <span class="btn-label">STATS</span>
+        </button>
+      </div>
+      <div class="activity-bottom">
+        <button class="btn-activity" id="btn-style-toggle" title="Toggle Theme">
+          ◑
+        </button>
+        <button class="btn-activity" id="btn-help">?</button>
+      </div>
+    </div>
+
+    <!-- side panels -->
+    <div id="edit-panel" class="sidebar-view hidden">
+      <div class="panel-inner">
+        <span class="panel-label">Map Editor</span>
+        <div class="tool-group">
+          <span class="group-label">Brush</span>
+          <div class="tool-row">
+            <button class="tool-btn active" id="btn-draw-tile">
+              <span class="tool-icon">&#9724;</span>
+              <span class="tool-text">Tile</span>
+            </button>
+            <button class="tool-btn" id="btn-draw-line">
+              <span class="tool-icon">&#9473;&#9473;&#9473;</span>
+              <span class="tool-text">Line</span>
+            </button>
+            <button class="tool-btn" id="btn-draw-rect">
+              <span class="tool-icon">&#9723;</span>
+              <span class="tool-text">Rect</span>
+            </button>
+            <button class="tool-btn" id="btn-draw-rect-filled">
+    <span class="tool-icon">&#9724;</span>
+    <span class="tool-text">Fill</span>
+  </button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <span class="group-label">Tile Type</span>
+          <div class="tool-row">
+            <button class="tool-btn active" id="btn-type-obstacle">
+              <span class="tool-icon">&#9724;</span>
+              <span class="tool-text">Wall</span>
+            </button>
+            <button class="tool-btn" id="btn-type-spawn">
+              <span class="tool-icon">&#x2B24;</span>
+              <span class="tool-text">Spawn</span>
+            </button>
+            <button class="tool-btn" id="btn-type-goal">
+              <span class="tool-icon">&#9873;</span>
+              <span class="tool-text">Goal</span>
+            </button>
+            <button class="tool-btn" id="btn-type-fire">
+              <span class="tool-icon">&#10039;</span>
+              <span class="tool-text">Fire</span>
+            </button>
+            <button class="tool-btn" id="btn-erase">
+              <span class="tool-icon">&#9746;</span>
+              <span class="tool-text">Erase</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <span class="group-label">Parameters</span>
+          <div class="param-row">
+            <label>Agents</label>
+            <div class="slider-wrapper">
+              <span class="slider-icon btn-minus" data-target="input-agent-count">−</span>
+              <input type="number" id="input-agent-count" value="100" min="1" max="500" />
+              <span class="slider-icon btn-plus" data-target="input-agent-count">+</span>
+            </div>
+          </div>
+          <div class="param-row">
+            <label>Agent Speed</label>
+            <div class="slider-wrapper">
+              <span class="slider-icon btn-minus" data-target="slider-agent-speed">−</span>
+              <input type="range" id="slider-agent-speed" min="1" max="10" step="0.5" value="5">
+              <span class="slider-icon btn-plus" data-target="slider-agent-speed">+</span>
+            </div>
+          </div>
+          <div class="param-row">
+            <label>Fire Speed</label>
+            <div class="slider-wrapper">
+              <span class="slider-icon btn-minus" data-target="slider-fire-spread">−</span>
+              <input type="range" id="slider-fire-spread" min="0.1" max="5" step="0.1" value="1">
+              <span class="slider-icon btn-plus" data-target="slider-fire-spread">+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="tool-row">
+            <button class="tool-btn" id="btn-clear">
+              <span class="tool-text">Clear All</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <span class="group-label">JSON Map file</span>
+          <div class="tool-row">
+            <button class="tool-btn" id="btn-import">
+              <span class="tool-text">Upload</span>
+            </button>
+            <button class="tool-btn" id="btn-export">
+              <span class="tool-text">Download</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stats-panel" class="sidebar-view hidden">
+      <div class="panel-inner">
+        <span class="panel-label">Live Statistics</span>
+
+        <!-- summary -->
+        <div class="tool-group">
+          <div class="stat-row">
+            <span class="stat-text">Total Agents</span>
+            <span class="stat-number" id="stat-total">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-text">Time Elapsed</span>
+            <span class="stat-number" id="stat-timer">00:00.0</span>
+          </div>
+        </div>
+
+        <!-- evac % bar -->
+        <div class="tool-group">
+          <span class="group-label">Evacuation Progress</span>
+          <div class="progress-bar-container">
+            <div id="bar-evacuated" class="progress-fill evacuated"></div>
+          </div>
+
+          <div class="stat-column-list">
+            <div class="legend-item">
+              <div class="legend-label-group">
+                <span class="dot evacuated"></span>
+                <span class="stat-text">Evacuated</span>
+              </div>
+              <span class="stat-number" id="stat-evacuated-count">0</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-label-group">
+                <span class="dot remaining"></span>
+                <span class="stat-text">Remaining</span>
+              </div>
+              <span class="stat-number" id="stat-remaining-count">0</span>
+            </div>
+          </div>
+        </div>
+        <!-- injury chart -->
+        <div class="tool-group">
+          <span class="group-label">Injury Levels (AIS)</span>
+          <div class="injury-chart" id="injury-chart">
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="0"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="1"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="2"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="3"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="4"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="5"></div>
+            </div>
+            <div class="injury-bar-wrap">
+              <div class="injury-bar" data-level="6"></div>
+            </div>
+          </div>
+
+          <div class="stat-column-list" id="ais-legend"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- canvas -->
+  <div id="canvas-wrap">
+    <canvas id="sim-canvas"></canvas>
+
+    <div class="zoom-controls">
+      <span class="zoom-label">ZOOM</span>
+      <div class="slider-wrapper">
+        <span class="slider-icon btn-minus" data-target="slider-zoom">−</span>
+        <input type="range" id="zoom-slider" min="10" max="40" value="20" step="5" />
+        <span class="slider-icon btn-plus" data-target="slider-zoom">+</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js" defer></script>
+</body>
+
+</html>

@@ -55,7 +55,7 @@ export class InputHandler {
     this.currentMouseTile = this.grid.pixelToTile(e.offsetX, e.offsetY);
 
     if (this.isPainting && !this.isPaused) {
-      if (this.brush === "drawTile" || this.brush === "erase") {
+      if (this.brush === "drawTile" || this.tileType === "erase") {
         this.#paint(e);
       }
     }

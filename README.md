@@ -33,7 +33,7 @@ The application runs entirely in the browser as static files. No installation or
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/your-repo-name.git
+git clone https://github.com/kaitlin-hourican/Evacuation-Simulation.git
 cd your-repo-name
 ```
 

@@ -29,6 +29,7 @@ export class Simulation {
     this.scale = scale;
     this.#onRender = onRender;
     this.agents = [];
+    this.deadAgents = [];
     this.stats = {
       spawned: 0,
       evacuated: 0,
@@ -46,6 +47,7 @@ export class Simulation {
   }
 
   spawnAgents() {
+    this.resetStats();
     this.clear();
     this.agents = [];
     const agentCount = parseInt(this.uiParams.agentCount.value);
@@ -78,15 +80,12 @@ export class Simulation {
   }
 
   draw() {
-    for (const agent of this.agents) {
-      if (agent._loggedDead) agent.draw(this.ctx);
-    }
-    for (const agent of this.agents) {
-      if (!agent._loggedDead) agent.draw(this.ctx);
-    }
+    for (const agent of this.deadAgents) agent.draw(this.ctx);
+    for (const agent of this.agents) agent.draw(this.ctx);
   }
 
   clear() {
+    this.fireSystem.reset();
     for (let row = 0; row < this.grid.rows; row++) {
       for (let col = 0; col < this.grid.cols; col++) {
         if (this.grid.getTile(row, col) === TILE_TYPES.BODY) {
@@ -94,7 +93,11 @@ export class Simulation {
         }
       }
     }
+    this.deadAgents = [];
     this.agents = [];
+  }
+
+  resetStats() {
     this.stats = {
       spawned: 0,
       evacuated: 0,
@@ -125,6 +128,7 @@ export class Simulation {
     this.#running = false;
     this.#accumulator = 0;
     this.gridSnapshot = null;
+    this.fireSystem.stop();
     if (this.#animFrameId) {
       cancelAnimationFrame(this.#animFrameId);
       this.#animFrameId = null;
@@ -145,6 +149,7 @@ export class Simulation {
 
     let stillActive = 0;
     let didStep = false;
+    let simulationComplete = false;
 
     while (this.#accumulator >= this.#fixedStep) {
       this.#accumulator -= this.#fixedStep;
@@ -173,6 +178,8 @@ export class Simulation {
             this.stats.injuryLevels[6]++;
             this.grid.setTile(result.row, result.col, TILE_TYPES.BODY);
             agent._loggedDead = true;
+            this.deadAgents.push(agent);
+            this.agents.splice(i, 1);
           }
           continue;
         }
@@ -181,24 +188,30 @@ export class Simulation {
       }
 
       this.#resolveAllCollisions();
-
-      if (stillActive === 0 && this.stats.spawned > 0) {
-        this.stop();
-        document.dispatchEvent(new CustomEvent("app-simulation-complete"));
-        break;
-      }
-
       this.fireSystem.update(this.#fixedStep * fireMult);
       this.stats.elapsed += this.#fixedStep;
+
+      if (didStep && stillActive === 0 && this.stats.spawned > 0) {
+        simulationComplete = true;
+        break;
+      }
     }
 
     if (didStep) {
-      const livingAgents = this.agents.filter((a) => !a._loggedDead).length;
-      this.statsController.update(this.stats, livingAgents);
+      this.statsController.update(this.stats, this.agents.length);
     }
 
     this.#onRender();
-    this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
+
+    if (simulationComplete) {
+      this.stop();
+      document.dispatchEvent(new CustomEvent("app-simulation-complete"));
+      return;
+    }
+
+    if (this.#running) {
+      this.#animFrameId = requestAnimationFrame((ts) => this.#update(ts));
+    }
   }
 
   get isRunning() {
@@ -235,9 +248,9 @@ export class Simulation {
       agent.pressureThisFrame = 0;
     }
 
-    const iterations = 5;
+    const loopCount = 5;
 
-    for (let iter = 0; iter < iterations; iter++) {
+    for (let loop = 0; loop < loopCount; loop++) {
       this.#buildSpatialGrid();
 
       for (let i = 0; i < this.agents.length; i++) {
@@ -247,15 +260,17 @@ export class Simulation {
         const nearby = this.#getNearbyAgents(a);
 
         for (const b of nearby) {
-          if (b === a || b._loggedDead) continue;
+          if (b === a || b._loggedDead || this.agents.indexOf(b) <= i) continue;
 
           const dx = a.x - b.x;
           const dy = a.y - b.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance === 0) continue;
+          const distSq = dx * dx + dy * dy;
+          const minDist = a.radius + b.radius;
 
-          const overlap = a.radius + b.radius - distance;
-          if (overlap > 0) {
+          if (distSq < minDist * minDist) {
+            const distance = Math.sqrt(distSq) || 0.1;
+            const overlap = minDist - distance;
+
             a.pressureThisFrame += overlap;
             b.pressureThisFrame += overlap;
 
@@ -276,12 +291,16 @@ export class Simulation {
       }
     }
 
+    for (const agent of this.agents) {
+      agent.pressureThisFrame /= loopCount;
+    }
+
     this.#applyPressureDamage();
   }
 
   #applyPressureDamage() {
     const PRESSURE_THRESHOLD = 0.3;
-    const PRESSURE_DAMAGE_SCALE = 0.5;
+    const PRESSURE_DAMAGE_SCALE = 0.8;
 
     for (const agent of this.agents) {
       if (agent._loggedDead) continue;

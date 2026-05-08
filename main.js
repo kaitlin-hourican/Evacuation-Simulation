@@ -151,6 +151,7 @@ document.addEventListener("app-import", () => {
 
 document.addEventListener("app-simulation-complete", () => {
   ui._updateModeUI("edit");
+  simulation.clear();
   ui.openStatsPanel();
   ui._showStatus("Simulation complete");
   editRender();
@@ -180,7 +181,7 @@ function loadMap(data) {
       grid.tilemap[row][col] = data.tilemap[row][col] ?? TILE_TYPES.EMPTY;
     }
   }
-  
+
   if (data.settings) {
     if (data.settings.agentCount)
       ui._params.agentCount.value = data.settings.agentCount;

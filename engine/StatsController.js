@@ -47,25 +47,30 @@ export class StatsController {
   update(stats, activeAgents) {
     if (!stats) return;
 
+    if (!this.evacBar || !this.totalAgents || !this.timer) {
+      console.error("StatsController: DOM elements not found");
+      return;
+    }
+
     const total = stats.spawned || 0;
     const evacPercent = total > 0 ? (stats.evacuated / total) * 100 : 0;
 
-    // summary
     this.totalAgents.textContent = total;
     this.timer.textContent = this.#formatTime(stats.elapsed);
 
-    // evac % bar
     this.evacBar.style.width = `${evacPercent}%`;
     this.evacCount.textContent = stats.evacuated;
     this.remainCount.textContent = activeAgents;
 
-    //ais bar chart
+    const chart = document.getElementById("injury-chart");
+    const CHART_HEIGHT = 120;
+
     INJURY_SCALE.forEach((item) => {
       const count = stats.injuryLevels[item.level] || 0;
-      const barHeight = total > 0 ? (count / total) * 100 : 0;
+      const barHeightPx = total > 0 ? (count / total) * CHART_HEIGHT : 0;
 
       if (this.injuryBars[item.level]) {
-        this.injuryBars[item.level].style.height = `${barHeight}%`;
+        this.injuryBars[item.level].style.height = `${barHeightPx}px`;
         this.injuryBars[item.level].style.backgroundColor = item.color;
       }
       if (this.injuryTexts[item.level]) {

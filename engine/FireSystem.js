@@ -1,6 +1,8 @@
 import { FIRE_STATES, TILE_TYPES } from "./constants.js";
 
 export class FireSystem {
+  #running = false;
+
   constructor(grid, spreadInterval, onSpread) {
     this.grid = grid;
     this.intensityField = [];
@@ -145,23 +147,31 @@ export class FireSystem {
   }
 
   start() {
-    if (this.intensityField.length === 0) {
-      this.#initIntensityField();
-      this.#seedFire();
-    }
+  if (this.intensityField.length === 0) {
+    this.#initIntensityField();
+    this.#seedFire();
+  }
+  this.#running = true;
+}
+
+  stop() {
+    this.#running = false;
   }
 
   update(deltaTime) {
-    this.spreadTimer += deltaTime;
-    if (this.spreadTimer >= this.spreadInterval) {
-      this.spreadTimer = 0;
-      this.spread();
-    }
+  if (!this.#running) return; 
+  this.spreadTimer += deltaTime;
+  if (this.spreadTimer >= this.spreadInterval) {
+    this.spreadTimer = 0;
+    this.spread();
   }
+}
 
   reset() {
-    this.intensityField = [];
-  }
+  this.#running = false; 
+  this.intensityField = [];
+  this.spreadTimer = 0;   
+}
 
   loadFromGrid() {
     this.#initIntensityField();

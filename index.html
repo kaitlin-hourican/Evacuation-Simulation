@@ -12,48 +12,72 @@
   <!-- modebar -->
   <div id="help-modal">
     <div class="modal-content">
-        <span id="btn-close-modal">&times;</span>
-        
-        <header class="modal-header">
-            <h2 class="modal-heading">Help Guide</h2>
-            <p class="modal-heading-desc">Design, simulate, and analyse emergency evacuation scenarios.</p>
-        </header>
+      <span id="btn-close-modal">&times;</span>
 
-        <article class="modal-section">
-            <h3>Design Your Map</h3>
-            <p>Use the <strong>Edit Panel</strong> to shape your environment. Select a brush and tile type to paint the grid.</p>
-            <ul class="tile-list">
-                <li><strong>⚑ Goal:</strong> The safe zone agents must reach.</li>
-                <li><strong>⬤ Spawn:</strong> Where agents appear in the simulation.</li>
-                <li><strong>◼ Wall:</strong> Permanent walls that block movement.</li>
-                <li><strong>✷ Fire:</strong> The origin point where fire begins to spread.</li>
-            </ul>
-            <p class="modal-note">
-                Use <strong>Clear</strong> to reset or <strong>Upload/Download</strong> to save JSON files.
-            </p>
-        </article>
+      <header class="modal-header">
+        <h2 class="modal-heading">Help Guide</h2>
+        <p class="modal-heading-desc">
+          Design, simulate, and analyse emergency evacuation scenarios.
+        </p>
+      </header>
 
-        <article class="modal-section">
-            <h3>Run Simulations</h3>
-            <p>Toggle the <strong>Mode Button</strong> in the top-right corner to switch modes.</p>
-            <ul class="feature-list">
-                <li><strong>Validation:</strong> Requires at least one Goal and one Spawn zone.</li>
-                <li><strong>Parameters:</strong> Adjust Speed, Fire Spread, and Agent Count.</li>
-                <li><strong>Live Data:</strong> View stats in the Statistics Panel during a run.</li>
-            </ul>
-        </article>
+      <article class="modal-section">
+        <h3>Design Your Map</h3>
+        <p>
+          Use the <strong>Edit Panel</strong> to shape your environment.
+          Select a brush and tile type to paint the grid.
+        </p>
+        <ul class="tile-list">
+          <li><strong>⚑ Goal:</strong> The safe zone agents must reach.</li>
+          <li>
+            <strong>⬤ Spawn:</strong> Where agents appear in the simulation.
+          </li>
+          <li>
+            <strong>◼ Wall:</strong> Permanent walls that block movement.
+          </li>
+          <li>
+            <strong>✷ Fire:</strong> The origin point where fire begins to
+            spread.
+          </li>
+        </ul>
+        <p class="modal-note">
+          Use <strong>Clear</strong> to reset or
+          <strong>Upload/Download</strong> to save JSON files.
+        </p>
+      </article>
 
-        <footer class="modal-tips">
-            <h3>Pro Tips</h3>
-            <ul>
-                <li>Place fire near doorways to test choke points.</li>
-                <li>Agents dynamically reroute as fire blocks paths.</li>
-                <li>Save complex layouts using the JSON feature.</li>
-            </ul>
-        </footer>
+      <article class="modal-section">
+        <h3>Run Simulations</h3>
+        <p>
+          Toggle the <strong>Mode Button</strong> in the top-right corner to
+          switch modes.
+        </p>
+        <ul class="feature-list">
+          <li>
+            <strong>Validation:</strong> Requires at least one Goal and one
+            Spawn zone.
+          </li>
+          <li>
+            <strong>Parameters:</strong> Adjust Speed, Fire Spread, and Agent
+            Count.
+          </li>
+          <li>
+            <strong>Live Data:</strong> View stats in the Statistics Panel
+            during a run.
+          </li>
+        </ul>
+      </article>
+
+      <footer class="modal-tips">
+        <h3>Pro Tips</h3>
+        <ul>
+          <li>Place fire near doorways to test choke points.</li>
+          <li>Agents dynamically reroute as fire blocks paths.</li>
+          <li>Save complex layouts using the JSON feature.</li>
+        </ul>
+      </footer>
     </div>
-</div>
-
+  </div>
 
   <header id="abms-modebar">
     <span class="app-title"><span>//</span> Agent Evacuation Simulator</span>
@@ -94,7 +118,25 @@
     <!-- side panels -->
     <div id="edit-panel" class="sidebar-view hidden">
       <div class="panel-inner">
-        <span class="panel-label">Map Editor</span>
+        <div class="panel-header">
+          <span class="panel-label">Map Editor</span>
+          <button id="btn-pin" title="Pin Panel">
+            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512.000000 512.000000" preserveAspectRatio="xMidYMid meet">
+              <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="currentColor">
+                <path d="M3484 5106 c-36 -16 -97 -84 -126 -140 -59 -115 -69 -264 -25 -378
+l25 -66 -746 -640 -746 -641 -27 24 c-126 105 -341 157 -509 121 -157 -33
+-341 -156 -360 -239 -4 -21 -4 -52 1 -70 6 -23 126 -150 444 -467 239 -239
+435 -439 435 -445 0 -5 -229 -239 -508 -520 -646 -649 -751 -765 -1234 -1362
+-37 -45 -71 -98 -77 -118 -28 -102 74 -192 171 -152 33 14 290 219 544 434
+255 215 465 413 947 892 l498 495 418 -418 419 -419 51 -5 c60 -5 90 10 146
+78 117 141 168 311 144 484 -14 103 -41 175 -100 264 l-48 74 636 741 c350
+408 637 744 639 746 2 2 27 -7 56 -19 66 -29 214 -39 286 -20 117 32 232 116
+250 183 23 83 48 55 -726 830 -394 395 -729 727 -743 737 -35 26 -97 33 -135
+16z" />
+              </g>
+            </svg>
+          </button>
+        </div>
         <div class="tool-group">
           <span class="group-label">Brush</span>
           <div class="tool-row">
@@ -111,9 +153,9 @@
               <span class="tool-text">Rect</span>
             </button>
             <button class="tool-btn" id="btn-draw-rect-filled">
-    <span class="tool-icon">&#9724;</span>
-    <span class="tool-text">Fill</span>
-  </button>
+              <span class="tool-icon">&#9724;</span>
+              <span class="tool-text">Fill</span>
+            </button>
           </div>
         </div>
 
@@ -157,7 +199,7 @@
             <label>Agent Speed</label>
             <div class="slider-wrapper">
               <span class="slider-icon btn-minus" data-target="slider-agent-speed">−</span>
-              <input type="range" id="slider-agent-speed" min="1" max="10" step="0.5" value="5">
+              <input type="range" id="slider-agent-speed" min="1" max="10" step="0.5" value="5" />
               <span class="slider-icon btn-plus" data-target="slider-agent-speed">+</span>
             </div>
           </div>
@@ -165,7 +207,7 @@
             <label>Fire Speed</label>
             <div class="slider-wrapper">
               <span class="slider-icon btn-minus" data-target="slider-fire-spread">−</span>
-              <input type="range" id="slider-fire-spread" min="0.1" max="5" step="0.1" value="1">
+              <input type="range" id="slider-fire-spread" min="0.1" max="5" step="0.1" value="1" />
               <span class="slider-icon btn-plus" data-target="slider-fire-spread">+</span>
             </div>
           </div>
@@ -195,7 +237,9 @@
 
     <div id="stats-panel" class="sidebar-view hidden">
       <div class="panel-inner">
-        <span class="panel-label">Live Statistics</span>
+        <div class="panel-header">
+          <span class="panel-label">Live Statistics</span>
+        </div>
 
         <!-- summary -->
         <div class="tool-group">
@@ -264,7 +308,6 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <!-- canvas -->
@@ -278,10 +321,6 @@
         <input type="range" id="zoom-slider" min="10" max="40" value="20" step="5" />
         <span class="slider-icon btn-plus" data-target="slider-zoom">+</span>
       </div>
-    </div>
-
-    <div id="minimap-wrap">
-      <canvas id="minimap-canvas"></canvas>
     </div>
   </div>
 

@@ -263,15 +263,21 @@ html, body {
     pointer-events: none;
 }
 
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
 .panel-label {
     display: block;
     font-size: 11px;
     color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
 }
 
 /* === edit panel === */
@@ -620,10 +626,10 @@ body {
 }
 
 .injury-chart {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 120px;
   margin-bottom: 12px;
   padding: 0 4px 4px 4px;
   border-left: 1px solid var(--border-lit);
@@ -631,6 +637,7 @@ body {
 }
 
 .injury-bar-wrap {
+  flex: 1;
   display: flex;
   align-items: flex-end;  
   height: 100%;          
@@ -638,7 +645,7 @@ body {
 
 .injury-bar {
   width: 100%;
-  height: 0%;
+  min-height: 0;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 2px 2px 0 0;
 }
@@ -785,6 +792,30 @@ body {
 
 #status-message.hidden {
   display: none;
+}
+
+/* === pin button === */
+#btn-pin {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    padding: 4px;
+    transition: color 0.2s, transform 0.2s;
+    color: var(--text-dim); 
+}
+
+#btn-pin svg {
+    height: 14px; 
+    width: auto;
+}
+
+#btn-pin:hover {
+    color: var(--text-muted); 
+}
+
+#btn-pin.pinned {
+    color: var(--accent);
 }
 
 @media (max-width: 580px) {

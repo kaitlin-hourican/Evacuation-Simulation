@@ -20,6 +20,7 @@ export class Agent {
     this.wanderAngle = Math.random() * Math.PI * 2;
     this.health = 100;
     this.maxHealth = 100;
+    this.pressureThisFrame = 0;
   }
 
   draw(ctx) {
@@ -163,7 +164,7 @@ export class Agent {
     const tileMetres = TILE_SIZE / PHYSICS_SCALE;
     if (tileMetres <= 0) return { x: 0, y: 0 };
 
-    // position in tile units 
+    // position in tile units
     const tx = this.x / tileMetres - 0.5;
     const ty = this.y / tileMetres - 0.5;
 
@@ -175,7 +176,7 @@ export class Agent {
     col0 = Math.max(0, Math.min(col0, flowfield.grid.cols - 2));
     row0 = Math.max(0, Math.min(row0, flowfield.grid.rows - 2));
 
-    // fractional part 
+    // fractional part
     const fx = tx - col0;
     const fy = ty - row0;
 

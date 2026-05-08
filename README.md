@@ -102,7 +102,9 @@ Tests:       38 passed, 38 total
   ├── StatsController.js      # Live statistics UI
   ├── Toolbar.js              # Mode and tool management
   └── tools.js                # Pure geometric brush functions
-├── tests/
+└── assets/
+  └── btn-pin.svg             # Button icon   
+└── tests/
   ├── tools.test.js           # Brush geometry unit tests
   ├── grid.test.js            # Grid spatial operation unit tests
   └── flowfield.test.js       # Pathfinding and reachability unit tests
@@ -238,31 +240,6 @@ Exported JSON files follow this schema:
 - Wall penetration may occasionally occur under extreme crowd density combined
   with active fire 
 - Cause of death (fire vs pressure) is not distinguished in statistics output
-
----
-
-## Further Development
-
-Suggested areas for improvement, in rough priority order:
-
-- **Web Worker offloading** — move flowfield computation to a Web Worker to eliminate
-  the main thread pause during flowfield recomputation on fire spread events
-- **Incremental flowfield updates** — only recompute tiles affected by a fire spread event rather than the full grid
-- **Social force model** — replace overlap-based collision with a proper repulsive force model (Helbing et al., 2000) for more realistic crowd density distributions
-- **Multiple goals** — allow agents to route to the nearest of several goal tiles, modelling multi-exit evacuation scenarios
-- **Configurable grid size** — expose `MAP_COLS` and `MAP_ROWS` as user-configurable options at startup
-- **Simulation replay** — record agent positions per frame for post-simulation playback and analysis
-- **CSV statistics export** — per-frame data export for analysis in Python or R
-- **Cause of death tracking** — distinguish fire deaths from pressure deaths in the statistics output
-
----
-
-## References
-
-- Helbing, D., Farkas, I., Vicsek, T. (2000). Simulating dynamical features of escape panic. *Nature*, 407, 487–490
-- Emerson, E. (2013). Crowd Pathfinding and Steering Using Flow Field Tiles. In *Game AI Pro*, CRC Press
-- Association for the Advancement of Automotive Medicine (2005). *Abbreviated Injury Scale*
-- Ericson, C. (2004). *Real-Time Collision Detection*. Morgan Kaufmann
 
 ---
 

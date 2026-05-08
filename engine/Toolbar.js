@@ -44,10 +44,12 @@ export class Toolbar {
       clear: document.getElementById("btn-clear"),
       import: document.getElementById("btn-import"),
       export: document.getElementById("btn-export"),
+      pin: document.getElementById("btn-pin"),
     };
 
     this.brush = "drawTile";
     this.tileType = "obstacle";
+    this.isPinned = false;
 
     this._params = {
       agentCount: document.getElementById("input-agent-count"),
@@ -127,6 +129,12 @@ export class Toolbar {
       );
     });
 
+    this._toolButtons.pin.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.isPinned = !this.isPinned;
+      this._toolButtons.pin.classList.toggle("pinned", this.isPinned);
+    });
+
     // slider (zoom/agents/speed) +/- buttons
     this._setupSliderControls();
 
@@ -139,7 +147,10 @@ export class Toolbar {
       if (e.target === this._helpModal) this._helpModal.style.display = "none";
 
       const sidebarContainer = document.querySelector(".sidebar-container");
-      if (sidebarContainer && !sidebarContainer.contains(e.target)) {
+
+      const shouldPanelClose = this.isPinned && this.mode === "edit";
+
+      if (sidebarContainer && !sidebarContainer.contains(e.target) && !shouldPanelClose) {
         this._closeAllSidebars();
       }
     });
@@ -153,7 +164,7 @@ export class Toolbar {
         this._showStatus("Need a goal and spawn zone to run");
         return;
       }
-      this._closeAllSidebars();
+      this._closeAllSidebars(true);
     }
 
     this._updateModeUI(nextMode);
@@ -215,6 +226,13 @@ export class Toolbar {
       const { btn, panel } = this._tabs[key];
 
       if (key === selectedTab) {
+        const isCurrentlyOpen = !panel.classList.contains("hidden");
+
+        if (isCurrentlyOpen && key === "edit" && this.isPinned && this.mode === "edit") {
+          anyOpen = true;
+          return;
+        }
+
         const isOpening = panel.classList.contains("hidden");
         panel.classList.toggle("hidden", !isOpening);
         btn.classList.toggle("active", isOpening);
@@ -238,6 +256,7 @@ export class Toolbar {
       this._tabs[key].btn.classList.remove("active");
     });
 
+    this._tabs.edit.panel.classList.remove("pinned");
     this._tabs.stats.panel.classList.remove("hidden");
     this._tabs.stats.btn.classList.add("active");
     document.body.classList.add("sidebar-open");
@@ -287,7 +306,9 @@ export class Toolbar {
     this._closeAllSidebars();
   }
 
-  _closeAllSidebars() {
+  _closeAllSidebars(forced = false) {
+    if (this.isPinned && this.mode === "edit" && !force) return;
+
     Object.keys(this._tabs).forEach((key) => {
       this._tabs[key].panel.classList.add("hidden");
       this._tabs[key].btn.classList.remove("active");

@@ -88,29 +88,35 @@ Tests:       38 passed, 38 total
 ---
 
 ## Project Structure
+## Project Structure
+
+```text
+.
 ├── index.html                # Application entry point
 ├── styles.css                # Global styles and theme variables
 ├── main.js                   # Composition root — wires all systems
-└── engine/
-  ├── Agent.js                # Individual agent state and behaviour
-  ├── constants.js            # Tile types, colours, AIS scale, map dimensions
-  ├── FireSystem.js           # Cellular automaton fire propagation
-  ├── Flowfield.js            # Dijkstra cost field and vector field
-  ├── Grid.js                 # Tilemap data structure and canvas rendering
-  ├── InputHandler.js         # Mouse input and tile painting
-  ├── Simulation.js           # Agent lifecycle, physics, collision resolution
-  ├── StatsController.js      # Live statistics UI
-  ├── Toolbar.js              # Mode and tool management
-  └── tools.js                # Pure geometric brush functions
-└── assets/
-  └── btn-pin.svg             # Button icon   
-└── tests/
-  ├── tools.test.js           # Brush geometry unit tests
-  ├── grid.test.js            # Grid spatial operation unit tests
-  └── flowfield.test.js       # Pathfinding and reachability unit tests
+├── engine/
+│   ├── Agent.js              # Individual agent state and behaviour
+│   ├── constants.js          # Tile types, colours, AIS scale, map dimensions
+│   ├── FireSystem.js         # Cellular automaton fire propagation
+│   ├── Flowfield.js          # Dijkstra cost field and vector field
+│   ├── Grid.js               # Tilemap data structure and canvas rendering
+│   ├── InputHandler.js       # Mouse input and tile painting
+│   ├── Simulation.js         # Agent lifecycle, physics, collision resolution
+│   ├── StatsController.js    # Live statistics UI
+│   ├── Toolbar.js            # Mode and tool management
+│   └── tools.js              # Pure geometric brush functions
+├── assets/
+│   └── btn-pin.svg           # Button icon asset   
+├── tests/
+│   ├── tools.test.js         # Brush geometry unit tests
+│   ├── grid.test.js          # Grid spatial operation unit tests
+│   └── flowfield.test.js     # Pathfinding and reachability unit tests
 ├── babel.config.json         # Babel config for Jest ES module support
 ├── package.json
 └── README.md
+```
+
 ---
 
 ## How to Use
